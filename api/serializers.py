@@ -1,5 +1,6 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
-from api.models import Organization
+from api.models import Organization, Choir
 
 
 # class OrganizationSerializer(serializers.Serializer):
@@ -32,6 +33,29 @@ from api.models import Organization
 #         return instance
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source="owner.id")
+
     class Meta:
         model = Organization
-        fields = ("id", "name", "address", "contact_phone_number", "contact_email", "description", "created_date")
+        fields = ("id", "name", "address", "description", "created_date", "owner", "admins")
+
+
+class UserSerializer(serializers.ModelSerializer):
+    owned_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    admin_of_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'owned_organizations', 'admin_of_organizations')
+
+
+class ChoirSerializer(serializers.ModelSerializer):
+    # organization = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+    # choristers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = Choir
+        fields = ("id", "name", "meeting_day", "meeting_day_start_hour", "meeting_day_end_hour", "choristers",
+                  "organization")
+
+

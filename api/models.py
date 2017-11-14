@@ -22,32 +22,44 @@ WEEKDAYS = [
 class Organization(models.Model):
     name = models.CharField(max_length=50, blank=False, null=False)
     address = models.CharField(max_length=50, blank=False, null=False)
-    contact_phone_number = models.CharField(max_length=20, null=True)
-    contact_email = models.CharField(max_length=350, null=False, blank=False)
     description = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)
+    owner = models.ForeignKey(User, related_name="owned_organizations")
+    admins = models.ManyToManyField(User, related_name="admin_of_organizations")
+
+    def __str__(self):
+        return f"{self.name}, owned by {self.owner.first_name} {self.owner.last_name}"
 
 
 class Choir(models.Model):
+    organization = models.OneToOneField(Organization)
     name = models.CharField(max_length=50, null=False, blank=False)
     meeting_day = models.IntegerField(choices=WEEKDAYS, null=False, blank=False)
     meeting_day_start_hour = models.TimeField(null=False)
-    meeting_day_end_hour = models.TimeField()
-    
-    perform_day = models.IntegerField(choices=WEEKDAYS, null=False, blank=False)
-    perform_day_start_hour = models.TimeField(null=False)
-    perform_day_end_hour = models.TimeField()
+    meeting_day_end_hour = models.TimeField(null=True)
+
+    # perform_day = models.IntegerField(choices=WEEKDAYS, null=True, blank=True)
+    # perform_day_start_hour = models.TimeField(null=True)
+    # perform_day_end_hour = models.TimeField()
 
     choristers = models.ManyToManyField(User)
+
+    def __str__(self):
+        return f"{self.name}, meets on {self.meeting_day} at {self.meeting_day_start_hour}"
+
 
 class Talents(models.Model):
     name = models.CharField(max_length=50, null=False, blank=False)
     user = models.ForeignKey(User)
 
+    def __str__(self):
+        return f"{self.user.first_name} {self.user.last_name}, {self.name}"
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name="profile")
-    address = models.CharField(max_length =100, null=True)
-    city = models.CharField(max_length =100, null=True)
+    address = models.CharField(max_length=100, null=True)
+    city = models.CharField(max_length=100, null=True)
     zip_code = USZipCodeField()
     phone_number = USPhoneNumberField()
     state = USStateField()
