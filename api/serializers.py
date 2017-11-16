@@ -34,6 +34,7 @@ from api.models import Organization, Choir
 
 class OrganizationSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
+    admins = serializers.PrimaryKeyRelatedField(many=True, required=False, queryset=User.objects.all())
 
     class Meta:
         model = Organization
@@ -50,8 +51,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ChoirSerializer(serializers.ModelSerializer):
-    # organization = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
-    # choristers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
+    choristers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Choir

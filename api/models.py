@@ -32,7 +32,7 @@ class Organization(models.Model):
 
 
 class Choir(models.Model):
-    organization = models.OneToOneField(Organization)
+    organization = models.ForeignKey(Organization)
     name = models.CharField(max_length=50, null=False, blank=False)
     meeting_day = models.IntegerField(choices=WEEKDAYS, null=False, blank=False)
     meeting_day_start_hour = models.TimeField(null=False)
