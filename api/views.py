@@ -31,7 +31,7 @@ class UserDetail(generics.RetrieveAPIView):
     serializer_class = UserSerializer
 
 
-class ChoirList(generics.ListAPIView):
+class ChoirList(generics.ListCreateAPIView):
     serializer_class = ChoirSerializer
 
     def get_queryset(self):
@@ -44,8 +44,7 @@ class ChoirList(generics.ListAPIView):
         return queryset
 
 
-
-class ChoirDetail(generics.RetrieveAPIView):
+class ChoirDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ChoirSerializer
 
     def get_queryset(self):
