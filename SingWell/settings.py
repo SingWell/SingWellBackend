@@ -25,7 +25,7 @@ SECRET_KEY = '&-m9@#wvj*u%vf1#$@#k)g73940q#cj!tj$wqdr@%697gjc=85'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'api',
-    'corsheaders'
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -52,6 +52,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ORIGIN_ALLOW_ALL=True
 
 ROOT_URLCONF = 'SingWell.urls'
 
@@ -81,8 +83,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'singwell',
-        'USER': 'root',
-        'PASSWORD': '',
+        'USER': 'singwell_admin',
+        'PASSWORD': 'WellSung2!',
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -121,7 +123,11 @@ USE_L10N = True
 
 USE_TZ = True
 
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
+STATIC_ROOT = '/home/ec2-user/SingWellBackend/static/'
 STATIC_URL = '/static/'
+STATICFILES_DIRS=(
+    os.path.join(BASE_DIR, 'static'),
+)
