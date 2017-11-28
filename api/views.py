@@ -1,6 +1,6 @@
-from api.models import Organization, Choir
+from api.models import Organization, Choir, Event
 from django.contrib.auth.models import User
-from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer
+from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, EventSerializer
 from rest_framework import generics
 
 
@@ -49,6 +49,31 @@ class ChoirDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         queryset = Choir.objects.all()
+
+        org_id = self.kwargs.get("org_id", None)  # default to none
+        if org_id:
+            queryset = queryset.filter(organization_id=org_id)
+
+        return queryset
+
+class EventList(generics.ListCreateAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        queryset = Event.objects.all()
+
+        org_id = self.kwargs.get("org_id", None)  # default to none
+        if org_id:
+            queryset = queryset.filter(organization_id=org_id)
+
+        return queryset
+
+
+class EventDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        queryset = Event.objects.all()
 
         org_id = self.kwargs.get("org_id", None)  # default to none
         if org_id:

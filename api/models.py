@@ -27,8 +27,13 @@ class Organization(models.Model):
     owner = models.ForeignKey(User, related_name="owned_organizations")
     admins = models.ManyToManyField(User, related_name="admin_of_organizations")
 
+    website_url = models.CharField(max_length=2000, blank=True, null=True)
+
     def __str__(self):
         return f"{self.name}, owned by {self.owner.first_name} {self.owner.last_name}"
+
+    def __unicode__(self):
+        return f"{self.name}"
 
 
 class Choir(models.Model):
@@ -37,6 +42,7 @@ class Choir(models.Model):
     meeting_day = models.IntegerField(choices=WEEKDAYS, null=False, blank=False)
     meeting_day_start_hour = models.TimeField(null=False)
     meeting_day_end_hour = models.TimeField(null=True)
+    description = models.TextField(null=True, blank=True)
 
     # perform_day = models.IntegerField(choices=WEEKDAYS, null=True, blank=True)
     # perform_day_start_hour = models.TimeField(null=True)
@@ -44,8 +50,15 @@ class Choir(models.Model):
 
     choristers = models.ManyToManyField(User)
 
+    @property
+    def organization_name(self):
+        return self.organization.name
+
     def __str__(self):
         return f"{self.name}, meets on {self.meeting_day} at {self.meeting_day_start_hour}"
+
+    def __unicode__(self):
+        return f"{self.name}"
 
 
 class Talents(models.Model):
@@ -55,6 +68,9 @@ class Talents(models.Model):
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}, {self.name}"
 
+    def __unicode__(self):
+        return f"{self.name}"
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name="profile")
@@ -63,3 +79,19 @@ class UserProfile(models.Model):
     zip_code = USZipCodeField()
     phone_number = USPhoneNumberField()
     state = USStateField()
+
+
+class Event(models.Model):
+    name = models.CharField(max_length=200, null=False, blank=False)
+    date = models.DateField(null=False, blank=False)
+    time = models.TimeField(null=False, blank=False)
+    location = models.CharField(max_length=200)
+    choirs = models.ManyToManyField(Choir, related_name="events")
+
+    organization = models.ForeignKey(Organization)
+
+    def __str__(self):
+        return f"{self.name} on {self.date} at {self.time}"
+
+    def __unicode__(self):
+        return f"{self.name}"

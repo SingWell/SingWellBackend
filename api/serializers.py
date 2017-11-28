@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from api.models import Organization, Choir
+from api.models import Organization, Choir, Event
 
 
 # class OrganizationSerializer(serializers.Serializer):
@@ -38,7 +38,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ("id", "name", "address", "description", "created_date", "owner", "admins")
+        fields = ("id", "name", "address", "description", "created_date", "owner", "admins", "website_url")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -53,10 +53,18 @@ class UserSerializer(serializers.ModelSerializer):
 class ChoirSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
     choristers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    organization_name = serializers.StringRelatedField(many=False, read_only=True)
 
     class Meta:
         model = Choir
         fields = ("id", "name", "meeting_day", "meeting_day_start_hour", "meeting_day_end_hour", "choristers",
-                  "organization")
+                  "organization", "organization_name")
 
+class EventSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
+    choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=False, queryset=Choir.objects.all())
+
+    class Meta:
+        model = Event
+        fields = ("id", "name", "date", "time", "location", "choirs", "organization")
 
