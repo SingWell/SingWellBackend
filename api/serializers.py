@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from api.models import Organization, Choir, Event
+from api.models import Organization, Choir, Event, MusicRecord
 
 
 # class OrganizationSerializer(serializers.Serializer):
@@ -14,7 +14,7 @@ from api.models import Organization, Choir, Event
 #
 #     def create(self, validated_data):
 #         """
-#         Create and return a new `Snippet` instance, given the validated data.
+#         Create and return a new `Organization` instance, given the validated data.
 #         """
 #         return Organization.objects.create(**validated_data)
 #
@@ -60,6 +60,7 @@ class ChoirSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "meeting_day", "meeting_day_start_hour", "meeting_day_end_hour", "choristers",
                   "organization", "organization_name")
 
+
 class EventSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
     choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=False, queryset=Choir.objects.all())
@@ -67,4 +68,12 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ("id", "name", "date", "time", "location", "choirs", "organization")
+
+
+class MusicRecordSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
+
+    class Meta:
+        model = MusicRecord
+        fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization")
 
