@@ -85,7 +85,7 @@ class ChoirDetail(generics.RetrieveUpdateDestroyAPIView):
 
 @api_view(["GET"])
 def ChoirsForUser(request, user_id):
-    user = User.objects.get(user_id=user_id)
+    user = User.objects.get(id=user_id)
     choirs = user.choir_set
     serializer = ChoirSerializer(choirs, many=True)
     return Response(serializer.data)
