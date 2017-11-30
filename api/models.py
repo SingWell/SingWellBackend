@@ -19,6 +19,10 @@ WEEKDAYS = [
 
 
 # Create your models here.
+
+# __str__ is used in the HTML
+# __unicode__ is used more internally
+
 class Organization(models.Model):
     name = models.CharField(max_length=50, blank=False, null=False)
     address = models.CharField(max_length=50, blank=False, null=False)
@@ -95,3 +99,19 @@ class Event(models.Model):
 
     def __unicode__(self):
         return f"{self.name}"
+
+
+class MusicRecord(models.Model):
+    title = models.CharField(max_length=500, null=False, blank=False)
+    composer = models.CharField(max_length=200, null=True, blank=True)
+    arranger = models.CharField(max_length=200, null=True, blank=True)
+    publisher = models.CharField(max_length=200, null=True, blank=True)
+    instrumentation = models.CharField(max_length=500, null=True, blank=True)
+
+    organization = models.ForeignKey(Organization)
+
+    def __str__(self):
+        return f"{self.title}, owned by {self.organization.name}"
+
+    def __unicode__(self):
+        return f"{self.title}"

@@ -83,8 +83,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'singwell',
-        'USER': 'singwell_admin',
-        'PASSWORD': 'WellSung2!',
+        'USER': 'root',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -126,8 +126,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-STATIC_ROOT = '/home/ec2-user/SingWellBackend/static/'
+# STATIC_ROOT = '/home/ec2-user/SingWellBackend/static/'
 STATIC_URL = '/static/'
-STATICFILES_DIRS=(
-    os.path.join(BASE_DIR, 'static'),
-)
+# STATICFILES_DIRS=(
+#     os.path.join(BASE_DIR, 'static'),
+# )

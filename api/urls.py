@@ -14,11 +14,18 @@ urlpatterns = [
 
     ### Event endpoints
     url(r'organizations/(?P<org_id>[0-9]+)/events/$', views.EventList.as_view(), name="Event List"),
-    url(r'organizations/(?P<org_id>[0-9]+)/events/(?P<pk>[0-9]+)/$', views.EventDetail.as_view(), name="Event List"),
+    url(r'organizations/(?P<org_id>[0-9]+)/events/(?P<pk>[0-9]+)/$', views.EventDetail.as_view(), name="Event Detail"),
+
+    ### Music library endpoints
+    url(r'organizations/(?P<org_id>[0-9]+)/musicRecords/$', views.MusicRecordList.as_view(), name="Music Record List"),
+    url(r'organizations/(?P<org_id>[0-9]+)/musicRecords/(?P<pk>[0-9]+)/$', views.MusicRecordDetail.as_view(), name="Music Record Detail"),
 
     ### User endpoints
     url(r'^users/$', views.UserList.as_view(), name="User List"),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view(), name="User Detail"),
+
+    ## Choirs for a user
+    url(r'users/(?P<user_id>[0-9]+)/choirs/$', views.ChoirsForUser, name="Choirs for User")
     ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
