@@ -12,7 +12,7 @@ urlpatterns = [
     # org_id gets used as a kwarg in the filter on the view, pk is automatically used to select the proper choir
     url(r'^organizations/(?P<org_id>[0-9]+)/choirs/(?P<pk>[0-9]+)/$', views.ChoirDetail.as_view(), name="Choir Detail"),
     ## Roster for a choir
-    url(r'^organizations/(?P<org_id>[0-9]+)/choirs/(?P<choir_id>[0-9]+)/$', views.ChoirRoster, name="Choir Roster"),
+    url(r'^organizations/(?P<org_id>[0-9]+)/choirs/(?P<choir_id>[0-9]+)/roster/$', views.ChoirRoster, name="Choir Roster"),
 
     ### Event endpoints
     url(r'^organizations/(?P<org_id>[0-9]+)/events/$', views.EventList.as_view(), name="Event List"),
