@@ -1,10 +1,11 @@
-from api.models import Organization, Choir, UserProfile
+from api.models import Organization, Choir, Event, MusicRecord, UserProfile
 from django.contrib.auth.models import User
-from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer
+from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, EventSerializer, MusicRecordSerializer
 from rest_framework import generics, status
-from api.permissions import IsOwner,IsAdmin, IsChorister
-from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from api.permissions import IsOwner,IsAdmin, IsChorister
 
 class OrganizationList(generics.ListCreateAPIView):
     """List organizations or create a new organization"""
@@ -74,7 +75,29 @@ class UserEdit(generics.RetrieveUpdateAPIView):
         else :
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-class ChoirList(generics.ListAPIView):
+@api_view(["GET", "POST"])
+def ChoirRoster(request, org_id, choir_id):
+    # TODO: Figure out how to do this in a rest framework way
+    """Retrieve the roster for a choir or add a user to a choir."""
+    if request.method == "GET":
+        choir = Choir.objects.filter(organization_id=org_id).get(id=choir_id)
+        roster = choir.choristers
+        serializer = UserSerializer(roster, many=True)
+        return Response(serializer.data)
+    else:
+        if request.method == "POST":
+            user_id = request.POST["user_id"]
+            choir = Choir.objects.filter(organization_id=org_id).get(id=choir_id)
+            user = User.objects.get(user_id=user_id)
+            choir.choristers.add(user)
+            choir.save()
+
+            serializer = ChoirSerializer(choir)
+
+            return Response(serializer.data)
+
+
+class ChoirList(generics.ListCreateAPIView):
     serializer_class = ChoirSerializer
 
     def get_queryset(self):
@@ -87,12 +110,72 @@ class ChoirList(generics.ListAPIView):
         return queryset
 
 
-
-class ChoirDetail(generics.RetrieveAPIView):
+class ChoirDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ChoirSerializer
 
     def get_queryset(self):
         queryset = Choir.objects.all()
+
+        org_id = self.kwargs.get("org_id", None)  # default to none
+        if org_id:
+            queryset = queryset.filter(organization_id=org_id)
+
+        return queryset
+
+
+@api_view(["GET"])
+def ChoirsForUser(request, user_id):
+    user = User.objects.get(id=user_id)
+    choirs = user.choir_set
+    serializer = ChoirSerializer(choirs, many=True)
+    return Response(serializer.data)
+
+
+
+class EventList(generics.ListCreateAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        queryset = Event.objects.all()
+
+        org_id = self.kwargs.get("org_id", None)  # default to none
+        if org_id:
+            queryset = queryset.filter(organization_id=org_id)
+
+        return queryset
+
+
+class EventDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = EventSerializer
+
+    def get_queryset(self):
+        queryset = Event.objects.all()
+
+        org_id = self.kwargs.get("org_id", None)  # default to none
+        if org_id:
+            queryset = queryset.filter(organization_id=org_id)
+
+        return queryset
+
+
+class MusicRecordList(generics.ListCreateAPIView):
+    serializer_class = MusicRecordSerializer
+
+    def get_queryset(self):
+        queryset = MusicRecord.objects.all()
+
+        org_id = self.kwargs.get("org_id", None)  # default to none
+        if org_id:
+            queryset = queryset.filter(organization_id=org_id)
+
+        return queryset
+
+
+class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = MusicRecordSerializer
+
+    def get_queryset(self):
+        queryset = MusicRecord.objects.all()
 
         org_id = self.kwargs.get("org_id", None)  # default to none
         if org_id:
