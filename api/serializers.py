@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from api.models import Organization, Choir
+from api.models import Organization, Choir, UserProfile
+from rest_framework.validators import UniqueValidator
 
 
 # class OrganizationSerializer(serializers.Serializer):
@@ -43,12 +44,39 @@ class OrganizationSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     owned_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     admin_of_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    talents  = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    
+    email = serializers.EmailField(required=True,validators=[UniqueValidator(queryset=User.objects.all())])
+    username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())])
+    password = serializers.CharField(min_length=8)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'owned_organizations', 'admin_of_organizations')
+        fields = ('id', 'username','email', 'password', 'admin_of_organizations', 'owned_organizations')
+    def create(self,validated_data):
+        user = User.objects.create_user(validated_data['username'], 
+            validated_data['email'],validated_data['password'])
+        return user
 
+class UserProfileSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = UserProfile
+        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth') 
+    def create(self, validated_data):
+        user = self.context['request'].user
+        user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data['date_of_birth'],
+            phone_number=validated_data['phone_number'], address=validated_data['address'],
+            bio=validated_data['bio'], city = validated_data['city'],
+            zip_code = validated_data['zip_code'], state = validated_data['state'],)
+        return user_profile
+    # def update(self,validated_data):
+    #     user = self.context['request'].user
+    #     user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data['date_of_birth'],
+    #         phone_number=validated_data['phone_number'], address=validated_data['address'],
+    #         bio=validated_data['bio'], city = validated_data['city'],
+    #         zip_code = validated_data['zip_code'], state = validated_data['state'],)
+    #     return user_profile
 class ChoirSerializer(serializers.ModelSerializer):
     # organization = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
     # choristers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)

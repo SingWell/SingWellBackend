@@ -1,7 +1,6 @@
 from django.db import models
 from django import forms
 from django.contrib.auth.models import User
-from localflavor.us.forms import USStateField, USZipCodeField, USPhoneNumberField
 
 
 	
@@ -58,8 +57,10 @@ class Talents(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name="profile")
+    bio = models.CharField(max_length=255, null=True)
     address = models.CharField(max_length=100, null=True)
     city = models.CharField(max_length=100, null=True)
-    zip_code = USZipCodeField()
-    phone_number = USPhoneNumberField()
-    state = USStateField()
+    zip_code = models.CharField(max_length=5, null=True)
+    phone_number = models.CharField(max_length=10, null=True)
+    state = models.CharField(max_length=20, null=True)
+    date_of_birth = models.DateField(null=True, blank=True)
