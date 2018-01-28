@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from api.models import Organization, Choir, UserProfile, Event, MusicRecord
 from rest_framework.validators import UniqueValidator
+import datetime
 
 
 
@@ -63,10 +64,11 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class UserProfileSerializer(serializers.ModelSerializer):
-
+    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d','%m-%d-%Y'])
+    age=serializers.SerializerMethodField(method_name='calculate_age')
     class Meta:
         model = UserProfile
-        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth') 
+        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age') 
     def create(self, validated_data):
         user = self.context['request'].user
         user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data['date_of_birth'],
@@ -74,6 +76,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             bio=validated_data['bio'], city = validated_data['city'],
             zip_code = validated_data['zip_code'], state = validated_data['state'],)
         return user_profile
+    def calculate_age(self,instance):
+        if datetime.datetime.now().year - instance.date_of_birth.year>116:
+            return "Hidden"
+        else:
+            return instance.age
     # def update(self,validated_data):
     #     user = self.context['request'].user
     #     user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data['date_of_birth'],

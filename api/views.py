@@ -17,7 +17,7 @@ class OrganizationList(generics.ListCreateAPIView):
 
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-
+    permission_classes= ()
 
 class OrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
     #permission_classes = (IsAdmin,IsOwner)
@@ -138,7 +138,7 @@ def ChoirsForUser(request, user_id):
 
 class EventList(generics.ListCreateAPIView):
     serializer_class = EventSerializer
-
+    
     def get_queryset(self):
         queryset = Event.objects.all()
 
