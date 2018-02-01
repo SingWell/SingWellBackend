@@ -14,7 +14,7 @@ class OrganizationList(generics.ListCreateAPIView):
             serializer.save(owner=self.request.user)
         else:
             serializer.save(owner=User.objects.get(id=1))  # todo only allow people logged in to create an organization
-
+    permission_classes = ()
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 

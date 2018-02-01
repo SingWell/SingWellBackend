@@ -25,7 +25,7 @@ WEEKDAYS = [
 class Organization(models.Model):
     name = models.CharField(max_length=50, blank=False, null=False)
     address = models.CharField(max_length=50, blank=False, null=True)
-    description = models.TextField()
+    description = models.TextField(null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(User, related_name="owned_organizations")
     admins = models.ManyToManyField(User, related_name="admin_of_organizations")
