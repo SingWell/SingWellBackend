@@ -89,7 +89,7 @@ class UserProfile(models.Model):
 class Event(models.Model):
     name = models.CharField(max_length=200, null=False, blank=False)
     date = models.DateField(null=False, blank=False)
-    time = models.TimeField(null=False, blank=False)
+    time = models.TimeField(null=True)
     location = models.CharField(max_length=200)
     choirs = models.ManyToManyField(Choir, related_name="events")
     programmed_music = models.ManyToManyField("MusicRecord")
