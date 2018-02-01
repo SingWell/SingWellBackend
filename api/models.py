@@ -24,7 +24,7 @@ WEEKDAYS = [
 
 class Organization(models.Model):
     name = models.CharField(max_length=50, blank=False, null=False)
-    address = models.CharField(max_length=50, blank=False, null=False)
+    address = models.CharField(max_length=50, blank=False, null=True)
     description = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(User, related_name="owned_organizations")
@@ -92,6 +92,7 @@ class Event(models.Model):
     time = models.TimeField(null=False, blank=False)
     location = models.CharField(max_length=200)
     choirs = models.ManyToManyField(Choir, related_name="events")
+    programmed_music = models.ManyToManyField("MusicRecord")
 
     organization = models.ForeignKey(Organization)
 

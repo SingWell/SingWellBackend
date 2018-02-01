@@ -4,36 +4,6 @@ from api.models import Organization, Choir, UserProfile, Event, MusicRecord
 from rest_framework.validators import UniqueValidator
 
 
-
-# class OrganizationSerializer(serializers.Serializer):
-#     id = serializers.IntegerField(read_only=True)
-#     name = serializers.CharField(max_length=50, required=True, allow_blank=False, allow_null=False)
-#     address = serializers.CharField(max_length=50, allow_blank=False, allow_null=False, required=True)
-#     contact_phone_number = serializers.CharField(max_length=20, allow_null=True, allow_blank=True, required=False)
-#     contact_email = serializers.CharField(max_length=350, allow_null=False, allow_blank=False, required=True)
-#     description = serializers.CharField()
-#     created_date = serializers.DateTimeField()
-#
-#     def create(self, validated_data):
-#         """
-#         Create and return a new `Organization` instance, given the validated data.
-#         """
-#         return Organization.objects.create(**validated_data)
-#
-#     def update(self, instance, validated_data):
-#         """
-#         Update and return an existing `Organization` instance, given the validated data.
-#         """
-#
-#         instance.name = validated_data.get('name', instance.name)
-#         instance.address = validated_data.get('address', instance.address)
-#         instance.contact_phone_number = validated_data.get('contact_phone_number', instance.contact_phone_number)
-#         instance.contact_email = validated_data.get('contact_email', instance.contact_email)
-#         instance.description = validated_data.get('description', instance.description)
-#         instance.created_date = validated_data.get('created_date', instance.created_date)
-#         instance.save()
-#         return instance
-
 class OrganizationSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
     admins = serializers.PrimaryKeyRelatedField(many=True, required=False, queryset=User.objects.all())
@@ -62,8 +32,8 @@ class UserSerializer(serializers.ModelSerializer):
             first_name=validated_data['first_name'], last_name=validated_data['last_name'])
         return user
 
-class UserProfileSerializer(serializers.ModelSerializer):
 
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth') 
@@ -86,10 +56,11 @@ class ChoirSerializer(serializers.ModelSerializer):
     choristers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     organization_name = serializers.StringRelatedField(many=False, read_only=True)
 
+
     class Meta:
         model = Choir
         fields = ("id", "name", "meeting_day", "meeting_day_start_hour", "meeting_day_end_hour", "choristers",
-                  "organization", "organization_name")
+                  "organization", "organization_name", "description")
 
 
 class EventSerializer(serializers.ModelSerializer):

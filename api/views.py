@@ -26,7 +26,7 @@ class OrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrganizationSerializer
 
 
-class UserList(generics.ListAPIView):
+class UserList(generics.ListCreateAPIView):
     permission_classes= ()
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -36,6 +36,7 @@ class UserDetail(generics.RetrieveAPIView):
     permission_classes= ()
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
 
 class UserCreate(generics.GenericAPIView):
     serializer_class  = UserSerializer
@@ -52,6 +53,8 @@ class UserCreate(generics.GenericAPIView):
                 json.pop('password')
                 return Response(json, status= status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class UserEdit(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     queryset = UserProfile.objects.all()
@@ -78,27 +81,6 @@ class UserEdit(generics.RetrieveUpdateAPIView):
         else :
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-@api_view(["GET", "POST"])
-def ChoirRoster(request, org_id, choir_id):
-    # TODO: Figure out how to do this in a rest framework way
-    """Retrieve the roster for a choir or add a user to a choir."""
-    if request.method == "GET":
-        choir = Choir.objects.filter(organization_id=org_id).get(id=choir_id)
-        roster = choir.choristers
-        serializer = UserSerializer(roster, many=True)
-        return Response(serializer.data)
-    else:
-        if request.method == "POST":
-            user_id = request.POST["user_id"]
-            choir = Choir.objects.filter(organization_id=org_id).get(id=choir_id)
-            user = User.objects.get(user_id=user_id)
-            choir.choristers.add(user)
-            choir.save()
-
-            serializer = ChoirSerializer(choir)
-
-            return Response(serializer.data)
-
 
 class ChoirList(generics.ListCreateAPIView):
     serializer_class = ChoirSerializer
@@ -106,7 +88,7 @@ class ChoirList(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Choir.objects.all()
 
-        org_id = self.kwargs.get("org_id", None)  # default to none
+        org_id = self.request.query_params.get("org_id", None)  # default to none
         if org_id:
             queryset = queryset.filter(organization_id=org_id)
 
@@ -127,6 +109,28 @@ class ChoirDetail(generics.RetrieveUpdateDestroyAPIView):
         return queryset
 
 
+@api_view(["GET", "POST"])
+def ChoirRoster(request, choir_id):
+    # TODO: Figure out how to do this in a rest framework way
+    """Retrieve the roster for a choir or add a user to a choir."""
+    if request.method == "GET":
+        choir = Choir.objects.get(id=choir_id)
+        roster = choir.choristers
+        serializer = UserSerializer(roster, many=True)
+        return Response(serializer.data)
+    else:
+        if request.method == "POST":
+            user_id = request.POST["user_id"]
+            choir = Choir.objects.get(id=choir_id)
+            user = User.objects.get(user_id=user_id)
+            choir.choristers.add(user)
+            choir.save()
+
+            serializer = ChoirSerializer(choir)
+
+            return Response(serializer.data)
+
+
 @api_view(["GET"])
 def ChoirsForUser(request, user_id):
     user = User.objects.get(id=user_id)
@@ -135,31 +139,22 @@ def ChoirsForUser(request, user_id):
     return Response(serializer.data)
 
 
-
 class EventList(generics.ListCreateAPIView):
     serializer_class = EventSerializer
 
     def get_queryset(self):
         queryset = Event.objects.all()
 
-        org_id = self.kwargs.get("org_id", None)  # default to none
-        if org_id:
-            queryset = queryset.filter(organization_id=org_id)
+        organization_id = self.request.query_params.get('organization', None)
+        if organization_id is not None:
+            organization = Organization.objects.get(id=organization_id)
+            queryset = queryset.filter(organization=organization)
 
         return queryset
 
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EventSerializer
-
-    def get_queryset(self):
-        queryset = Event.objects.all()
-
-        org_id = self.kwargs.get("org_id", None)  # default to none
-        if org_id:
-            queryset = queryset.filter(organization_id=org_id)
-
-        return queryset
 
 
 class MusicRecordList(generics.ListCreateAPIView):
@@ -168,21 +163,12 @@ class MusicRecordList(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
 
-        org_id = self.kwargs.get("org_id", None)  # default to none
+        org_id = self.kwargs.query_params.get("organization", None)  # default to none
         if org_id:
-            queryset = queryset.filter(organization_id=org_id)
-
+            organization = Organization.objects.get(id=org_id)
+            queryset = queryset.filter(organization=organization)
         return queryset
 
 
 class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicRecordSerializer
-
-    def get_queryset(self):
-        queryset = MusicRecord.objects.all()
-
-        org_id = self.kwargs.get("org_id", None)  # default to none
-        if org_id:
-            queryset = queryset.filter(organization_id=org_id)
-
-        return queryset
