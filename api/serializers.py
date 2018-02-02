@@ -77,10 +77,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             zip_code = validated_data['zip_code'], state = validated_data['state'],)
         return user_profile
     def calculate_age(self,instance):
-        if datetime.datetime.now().year - instance.date_of_birth.year>116:
-            return "Hidden"
-        else:
-            return instance.age
+        if instance.date_of_birth is not None:
+            if datetime.datetime.now().year - instance.date_of_birth.year>116:
+                return "Hidden"
+            else:
+                return instance.age
     # def update(self,validated_data):
     #     user = self.context['request'].user
     #     user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data['date_of_birth'],

@@ -37,9 +37,12 @@ class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     def retrieve(self,request, pk):
-        serializer = UserSerializer(request.user)
+        user = User.objects.get(id=pk)
+        serializer = UserSerializer(user)
+        user_profile = UserProfileSerializer(UserProfile.objects.get(user__id=pk))
         return_data = {}
         return_data.update(serializer.data)
+        return_data.update(user_profile.data)
         return_data.pop('password')
         return Response(return_data, status= status.HTTP_200_OK)
 
