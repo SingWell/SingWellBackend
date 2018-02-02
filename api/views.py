@@ -73,7 +73,10 @@ class UserEdit(generics.RetrieveUpdateAPIView):
             user_profile = UserProfile.objects.get(user = request.user)
             if user_profile :
                 serializer = UserProfileSerializer(user_profile, context={'request':request}, partial=True)
-                return Response(serializer.data, status= status.HTTP_200_OK)
+                print(request.user.first_name)
+                return_data = {'first_name' : request.user.first_name, 'last_name':request.user.last_name, 'email': request.user.email}
+                return_data.update(serializer.data)
+                return Response(return_data, status= status.HTTP_200_OK)
             return Response(status=status.HTTP_400_BAD_REQUEST)
         else :
             return Response(status=status.HTTP_401_UNAUTHORIZED)
