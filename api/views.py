@@ -36,6 +36,12 @@ class UserDetail(generics.RetrieveAPIView):
     permission_classes= ()
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    def retrieve(self,request, pk):
+        serializer = UserSerializer(request.user)
+        return_data = {}
+        return_data.update(serializer.data)
+        return_data.pop('password')
+        return Response(return_data, status= status.HTTP_200_OK)
 
 class UserCreate(generics.GenericAPIView):
     serializer_class  = UserSerializer
@@ -73,7 +79,6 @@ class UserEdit(generics.RetrieveUpdateAPIView):
             user_profile = UserProfile.objects.get(user = request.user)
             if user_profile :
                 serializer = UserProfileSerializer(user_profile, context={'request':request}, partial=True)
-                print(request.user.first_name)
                 return_data = {'first_name' : request.user.first_name, 'last_name':request.user.last_name, 'email': request.user.email}
                 return_data.update(serializer.data)
                 return Response(return_data, status= status.HTTP_200_OK)
