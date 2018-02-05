@@ -51,7 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField(required=True,validators=[UniqueValidator(queryset=User.objects.all())])
     username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())])
-    password = serializers.CharField(min_length=8)
+    password = serializers.CharField(min_length=8, write_only=True)
     first_name = serializers.CharField(min_length=2, max_length= 25)
     last_name = serializers.CharField(min_length=2, max_length= 25)
     class Meta:
