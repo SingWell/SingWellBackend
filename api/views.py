@@ -50,7 +50,6 @@ class UserCreate(generics.GenericAPIView):
                 user_profile = UserProfile.objects.create(user=user)
                 json = serializer.data
                 json['token']= token.key
-                json.pop('password')
                 return Response(json, status= status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
