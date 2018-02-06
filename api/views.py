@@ -88,7 +88,7 @@ class ChoirList(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Choir.objects.all()
 
-        org_id = self.request.query_params.get("org_id", None)  # default to none
+        org_id = self.request.query_params.get("organization", None)  # default to none
         if org_id:
             queryset = queryset.filter(organization_id=org_id)
 
@@ -102,7 +102,7 @@ class ChoirDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         queryset = Choir.objects.all()
 
-        org_id = self.kwargs.get("org_id", None)  # default to none
+        org_id = self.kwargs.get("organization", None)  # default to none
         if org_id:
             queryset = queryset.filter(organization_id=org_id)
 
@@ -166,7 +166,6 @@ class MusicRecordList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
-        permission_classes = ()
 
         org_id = self.kwargs.query_params.get("organization", None)  # default to none
         if org_id:
