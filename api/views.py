@@ -99,15 +99,7 @@ class ChoirList(generics.ListCreateAPIView):
 class ChoirDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ChoirSerializer
     permission_classes= ()
-
-    def get_queryset(self):
-        queryset = Choir.objects.all()
-
-        org_id = self.kwargs.get("organization", None)  # default to none
-        if org_id:
-            queryset = queryset.filter(organization_id=org_id)
-
-        return queryset
+    queryset = Choir.objects.all()
 
 
 @api_view(["GET", "POST"])
@@ -158,12 +150,12 @@ class EventList(generics.ListCreateAPIView):
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EventSerializer
     permission_classes = ()
+    queryset = Event.objects.all()
 
 
 class MusicRecordList(generics.ListCreateAPIView):
     serializer_class = MusicRecordSerializer
     permission_classes = ()
-
 
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
