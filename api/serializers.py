@@ -8,6 +8,12 @@ class OrganizationSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
     admins = serializers.PrimaryKeyRelatedField(many=True, required=False, queryset=User.objects.all())
 
+    def update(self, instance, validated_data):
+        for field in validated_data:
+            setattr(instance, field, validated_data.get(field, getattr(instance, field)))
+
+        return instance
+
     class Meta:
         model = Organization
         fields = ("id", "name", "address", "description", "created_date", "owner", "admins", "website_url")

@@ -13,7 +13,7 @@ class OrganizationList(generics.ListCreateAPIView):
         if self.request.user.is_authenticated:
             serializer.save(owner=self.request.user)
         else:
-            serializer.save(owner=User.objects.get(id=1))  # todo only allow people logged in to create an organization
+            serializer.save(owner=User.objects.all()[0])  # todo only allow people logged in to create an organization
     permission_classes = ()
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
@@ -141,6 +141,7 @@ def ChoirsForUser(request, user_id):
 
 class EventList(generics.ListCreateAPIView):
     serializer_class = EventSerializer
+    permission_classes = ()
 
     def get_queryset(self):
         queryset = Event.objects.all()
@@ -155,13 +156,17 @@ class EventList(generics.ListCreateAPIView):
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EventSerializer
+    permission_classes = ()
 
 
 class MusicRecordList(generics.ListCreateAPIView):
     serializer_class = MusicRecordSerializer
+    permission_classes = ()
+
 
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
+        permission_classes = ()
 
         org_id = self.kwargs.query_params.get("organization", None)  # default to none
         if org_id:
@@ -172,3 +177,4 @@ class MusicRecordList(generics.ListCreateAPIView):
 
 class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicRecordSerializer
+    permission_classes = ()
