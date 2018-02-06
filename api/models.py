@@ -1,7 +1,7 @@
 from django.db import models
 from django import forms
 from django.contrib.auth.models import User
-
+from datetime import datetime
 
 	
 
@@ -84,6 +84,9 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=10, null=True)
     state = models.CharField(max_length=20, null=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    @property
+    def age(self):
+        return datetime.today().year - self.date_of_birth.year - ((datetime.today().month, datetime.today().day) < (self.date_of_birth.month, self.date_of_birth.day))
 
 
 class Event(models.Model):

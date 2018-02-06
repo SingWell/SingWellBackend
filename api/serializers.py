@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from api.models import Organization, Choir, UserProfile, Event, MusicRecord
 from rest_framework.validators import UniqueValidator
+import datetime
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -26,7 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField(required=True,validators=[UniqueValidator(queryset=User.objects.all())])
     username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())])
-    password = serializers.CharField(min_length=8)
+    password = serializers.CharField(min_length=8, write_only=True)
     first_name = serializers.CharField(min_length=2, max_length= 25)
     last_name = serializers.CharField(min_length=2, max_length= 25)
     class Meta:
@@ -38,11 +39,12 @@ class UserSerializer(serializers.ModelSerializer):
             first_name=validated_data['first_name'], last_name=validated_data['last_name'])
         return user
 
-
 class UserProfileSerializer(serializers.ModelSerializer):
+    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d','%m-%d-%Y'])
+    age=serializers.SerializerMethodField(method_name='calculate_age')
     class Meta:
         model = UserProfile
-        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth') 
+        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age') 
     def create(self, validated_data):
         user = self.context['request'].user
         user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data['date_of_birth'],
@@ -50,6 +52,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             bio=validated_data['bio'], city = validated_data['city'],
             zip_code = validated_data['zip_code'], state = validated_data['state'],)
         return user_profile
+    def calculate_age(self,instance):
+        if instance.date_of_birth is not None:
+            if datetime.datetime.now().year - instance.date_of_birth.year>116:
+                return "Hidden"
+            else:
+                return instance.age
     # def update(self,validated_data):
     #     user = self.context['request'].user
     #     user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data['date_of_birth'],
