@@ -2,10 +2,11 @@ from api.models import Organization, Choir, Event, MusicRecord, UserProfile
 from django.contrib.auth.models import User
 from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, EventSerializer, MusicRecordSerializer
 from rest_framework import generics, status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from api.permissions import IsOwner,IsAdmin, IsChorister
+from rest_framework.permissions import AllowAny
 
 class OrganizationList(generics.ListCreateAPIView):
     """List organizations or create a new organization"""
@@ -80,6 +81,7 @@ class UserEdit(generics.RetrieveUpdateAPIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(["GET", "POST"])
+@permission_classes((AllowAny,))
 def ChoirRoster(request, org_id, choir_id):
     # TODO: Figure out how to do this in a rest framework way
     """Retrieve the roster for a choir or add a user to a choir."""
@@ -139,7 +141,7 @@ def ChoirsForUser(request, user_id):
 
 class EventList(generics.ListCreateAPIView):
     serializer_class = EventSerializer
-    
+    permission_classes=()
     def get_queryset(self):
         queryset = Event.objects.all()
 
@@ -152,7 +154,7 @@ class EventList(generics.ListCreateAPIView):
 
 class EventDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EventSerializer
-
+    permission_classes=()
     def get_queryset(self):
         queryset = Event.objects.all()
 
@@ -165,7 +167,7 @@ class EventDetail(generics.RetrieveUpdateDestroyAPIView):
 
 class MusicRecordList(generics.ListCreateAPIView):
     serializer_class = MusicRecordSerializer
-
+    permission_classes=()
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
 
@@ -178,7 +180,7 @@ class MusicRecordList(generics.ListCreateAPIView):
 
 class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicRecordSerializer
-
+    permission_classes=()
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
 
