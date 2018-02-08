@@ -25,11 +25,11 @@ class UserSerializer(serializers.ModelSerializer):
     admin_of_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     #talents  = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     
-    email = serializers.EmailField(required=True,validators=[UniqueValidator(queryset=User.objects.all())])
-    username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())])
+    email = serializers.EmailField(required=False,validators=[UniqueValidator(queryset=User.objects.all())])
+    username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())], required=True)
     password = serializers.CharField(min_length=8, write_only=True)
-    first_name = serializers.CharField(min_length=2, max_length= 25)
-    last_name = serializers.CharField(min_length=2, max_length= 25)
+    first_name = serializers.CharField(min_length=2, max_length= 25, required=False)
+    last_name = serializers.CharField(min_length=2, max_length= 25, required=False)
 
     class Meta:
         model = User
@@ -38,7 +38,7 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self,validated_data):
         user = User.objects.create_user(validated_data.get("username"),
             validated_data.get("email"),validated_data.get("password"),
-            first_name=validated_data.get("first_name", None), last_name=validated_data.get("last_name", None))
+            first_name=validated_data.get("first_name", ""), last_name=validated_data.get("last_name", ""))
         return user
 
 class UserProfileSerializer(serializers.ModelSerializer):

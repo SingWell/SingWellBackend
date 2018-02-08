@@ -22,8 +22,9 @@ class UserTestCase(TestCase):
         user = User.objects.get(email="joien@smu.edu")
         self.assertEquals(user.email, "joien@smu.edu", "test message")
 
-    def test_onlyEmailAndPasswordAreRequiredToCreateUser(self):
-        response = c.post("/users/", {"email": "jake@smu.edu", "password": "password"})
+    def test_onlyUsernameAndPasswordAreRequiredToCreateUser(self):
+        response = c.post("/users/", {"username": "jake@smu.edu", "password": "password"})
+        print(response.content)
         self.assertIn(response.status_code, [200, 201])
 
 
