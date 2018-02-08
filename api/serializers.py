@@ -36,7 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username','email', 'password', 'first_name', 'last_name', 'admin_of_organizations', 'owned_organizations')
 
     def create(self,validated_data):
-        user = User.objects.create_user(validated_data.get("user"),
+        user = User.objects.create_user(validated_data.get("username"),
             validated_data.get("email"),validated_data.get("password"),
             first_name=validated_data.get("first_name", None), last_name=validated_data.get("last_name", None))
         return user
