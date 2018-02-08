@@ -39,7 +39,6 @@ urlpatterns = [
 
     ## Choirs for a user
     url(r'users/(?P<user_id>[0-9]+)/choirs/$', views.ChoirsForUser, name="Choirs for User")
-
     ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
