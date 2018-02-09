@@ -8,6 +8,10 @@ from rest_framework.response import Response
 from api.permissions import IsOwner,IsAdmin, IsChorister
 from rest_framework.permissions import AllowAny
 
+def _filter_queryset_(queryset, params):
+    pass
+
+
 class OrganizationList(generics.ListCreateAPIView):
     """List organizations or create a new organization"""
     def perform_create(self, serializer):
@@ -18,7 +22,6 @@ class OrganizationList(generics.ListCreateAPIView):
     permission_classes = ()
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-    permission_classes= ()
 
 class OrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
     #permission_classes = (IsAdmin,IsOwner)
@@ -159,7 +162,6 @@ class MusicRecordList(generics.ListCreateAPIView):
     permission_classes=()
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
-
         org_id = self.kwargs.query_params.get("organization", None)  # default to none
         if org_id:
             organization = Organization.objects.get(id=org_id)
@@ -170,3 +172,4 @@ class MusicRecordList(generics.ListCreateAPIView):
 class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicRecordSerializer
     permission_classes = ()
+    queryset = MusicRecord.objects.all()

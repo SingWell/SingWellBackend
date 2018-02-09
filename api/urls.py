@@ -33,13 +33,12 @@ urlpatterns = [
     ### User endpoints
     url(r'^users/$', views.UserList.as_view(), name="User List"),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view(), name="User Detail"),
-    url(r'^login$', rest_framework_views.obtain_auth_token, name='Login'),
-    url(r'^register$', views.UserCreate.as_view(), name='Register'),
-    url(r'^profile$', views.UserEdit.as_view(), name='Get User info/Edit User'),
+    url(r'^login/$', rest_framework_views.obtain_auth_token, name='Login'),
+    url(r'^register/$', views.UserCreate.as_view(), name='Register'),
+    url(r'^profile/$', views.UserEdit.as_view(), name='Get User info/Edit User'),
 
     ## Choirs for a user
     url(r'users/(?P<user_id>[0-9]+)/choirs/$', views.ChoirsForUser, name="Choirs for User")
-
     ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
