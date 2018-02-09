@@ -1,12 +1,16 @@
 from api.models import Organization, Choir, Event, MusicRecord, UserProfile
 from django.contrib.auth.models import User
-from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, EventSerializer, MusicRecordSerializer
-from rest_framework import generics, status
+from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, EventSerializer, MusicRecordSerializer, AuthTokenSerializer
+from rest_framework import generics, status,parsers, renderers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from api.permissions import IsOwner,IsAdmin, IsChorister
 from rest_framework.permissions import AllowAny
+from rest_framework.schemas import  ManualSchema
+from rest_framework.views import APIView
+import coreapi
+import coreschema
 
 def _filter_queryset_(queryset, params):
     pass
@@ -46,6 +50,7 @@ class UserCreate(generics.GenericAPIView):
     serializer_class  = UserSerializer
     permission_classes=()
     def post(self, request):
+        request.data['username']=request.data['email']
         serializer =  UserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -86,6 +91,45 @@ class UserEdit(generics.RetrieveUpdateAPIView):
         else :
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+class UserLogin(APIView):
+    serializer_class = AuthTokenSerializer
+    throttle_classes = ()
+    permission_classes = ()
+    parser_classes = (parsers.FormParser, parsers.MultiPartParser, parsers.JSONParser,)
+    renderer_classes = (renderers.JSONRenderer,)
+
+    schema = ManualSchema(
+        fields=[
+            coreapi.Field(
+                name="email",
+                required=True,
+                location='form',
+                schema=coreschema.String(
+                    title="Email",
+                    description="Valid email for authentication",
+                ),
+            ),
+            coreapi.Field(
+                name="password",
+                required=True,
+                location='form',
+                schema=coreschema.String(
+                    title="Password",
+                    description="Valid password for authentication",
+                ),
+            ),
+        ],
+    )
+
+
+
+    def post(self,request, *args,**kwargs):
+        serializer = self.serializer_class(data=request.data, context= {'request':request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        user_id =user.id
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key,'user_id':user_id})
 
 class ChoirList(generics.ListCreateAPIView):
     serializer_class = ChoirSerializer

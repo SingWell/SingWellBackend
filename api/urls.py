@@ -33,7 +33,7 @@ urlpatterns = [
     ### User endpoints
     url(r'^users/$', views.UserList.as_view(), name="User List"),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view(), name="User Detail"),
-    url(r'^login/$', rest_framework_views.obtain_auth_token, name='Login'),
+    url(r'^login/$', views.UserLogin.as_view(), name='Login'),
     url(r'^register/$', views.UserCreate.as_view(), name='Register'),
     url(r'^profile/$', views.UserEdit.as_view(), name='Get User info/Edit User'),
 
