@@ -22,9 +22,17 @@ WEEKDAYS = [
 # __str__ is used in the HTML
 # __unicode__ is used more internally
 
+# class Address(models.Model):
+#     street = models.CharField(max_length=300, null=True)
+#     city = models.CharField(max_length=100, null=True)
+#     state = models.CharField(max_length=20, null=True)
+#     zipcode = models.CharField(max_length=20, null=True)
+
 class Organization(models.Model):
     name = models.CharField(max_length=50, blank=False, null=False)
     address = models.CharField(max_length=50, blank=False, null=True)
+    phone_number = models.CharField(max_length=20, null=True)
+    email = models.CharField(max_length=300, null=True)
     description = models.TextField(null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(User, related_name="owned_organizations")
@@ -51,7 +59,7 @@ class Choir(models.Model):
     # perform_day_start_hour = models.TimeField(null=True)
     # perform_day_end_hour = models.TimeField()
 
-    choristers = models.ManyToManyField(User)
+    choristers = models.ManyToManyField(User, related_name="choirs")
 
     @property
     def organization_name(self):
