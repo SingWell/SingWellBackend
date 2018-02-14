@@ -163,7 +163,7 @@ def ChoirRoster(request, choir_id):
         if request.method == "POST":
             user_id = request.POST["user_id"]
             choir = Choir.objects.get(id=choir_id)
-            user = User.objects.get(user_id=user_id)
+            user = User.objects.get(id=user_id)
             choir.choristers.add(user)
             choir.save()
 
@@ -206,7 +206,7 @@ class MusicRecordList(generics.ListCreateAPIView):
     permission_classes=()
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
-        org_id = self.kwargs.query_params.get("organization", None)  # default to none
+        org_id = self.request.query_params.get("organization", None)  # default to none
         if org_id:
             organization = Organization.objects.get(id=org_id)
             queryset = queryset.filter(organization=organization)
