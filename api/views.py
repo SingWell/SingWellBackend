@@ -1,6 +1,6 @@
-from api.models import Organization, Choir, Event, MusicRecord, UserProfile
+from api.models import Organization, Choir, Event, MusicRecord, UserProfile, MusicResource
 from django.contrib.auth.models import User
-from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, EventSerializer, MusicRecordSerializer, AuthTokenSerializer
+from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, EventSerializer, MusicRecordSerializer, AuthTokenSerializer, MusicResourceSerializer
 from rest_framework import generics, status,parsers, renderers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.models import Token
@@ -23,6 +23,9 @@ class OrganizationList(generics.ListCreateAPIView):
             serializer.save(owner=self.request.user)
         else:
             serializer.save(owner=User.objects.all()[0])  # todo only allow people logged in to create an organization
+
+    # def update(self):
+
     permission_classes = ()
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
@@ -32,7 +35,6 @@ class OrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes= ()
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
-
 
 class UserList(generics.ListCreateAPIView):
     permission_classes= ()
@@ -206,7 +208,7 @@ class MusicRecordList(generics.ListCreateAPIView):
     permission_classes=()
     def get_queryset(self):
         queryset = MusicRecord.objects.all()
-        org_id = self.kwargs.query_params.get("organization", None)  # default to none
+        org_id = self.request.query_params.get("organization", None)  # default to none
         if org_id:
             organization = Organization.objects.get(id=org_id)
             queryset = queryset.filter(organization=organization)
@@ -217,3 +219,22 @@ class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicRecordSerializer
     permission_classes = ()
     queryset = MusicRecord.objects.all()
+
+
+class MusicResourceList(generics.ListCreateAPIView):
+    serializer_class = MusicResourceSerializer
+    permission_classes = ()
+
+    def get_queryset(self):
+        queryset = MusicResource.objects.all()
+        org_id = self.request.query_params.get("organization", None)  # default to none
+        if org_id:
+            organization = Organization.objects.get(id=org_id)
+            queryset = queryset.filter(organization=organization)
+        return queryset
+
+
+class MusicResourceDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = MusicResourceSerializer
+    permission_classes = ()
+    queryset = MusicResource.objects.all()

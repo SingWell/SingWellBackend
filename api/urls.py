@@ -30,6 +30,10 @@ urlpatterns = [
     url(r'^musicRecords/$', views.MusicRecordList.as_view(), name="Music Record List"),
     url(r'^musicRecords/(?P<pk>[0-9]+)/$', views.MusicRecordDetail.as_view(), name="Music Record Detail"),
 
+    ### Music Resource endpoints
+    url(r'^musicResources/$', views.MusicResourceList.as_view(), name="Music Resource List"),
+    url(r'^musicResources/(?P<pk>[0-9]+)/$', views.MusicResourceDetail.as_view(), name="Music Resource Detail"),
+
     ### User endpoints
     url(r'^users/$', views.UserList.as_view(), name="User List"),
     url(r'^users/(?P<pk>[0-9]+)/$', views.UserDetail.as_view(), name="User Detail"),
