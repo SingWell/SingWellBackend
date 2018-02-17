@@ -136,12 +136,18 @@ class UserLogin(APIView):
 class ChoirList(generics.ListCreateAPIView):
     serializer_class = ChoirSerializer
     permission_classes= ()
+
     def get_queryset(self):
         queryset = Choir.objects.all()
 
         org_id = self.request.query_params.get("organization", None)  # default to none
         if org_id:
             queryset = queryset.filter(organization_id=org_id)
+        user_id = self.request.query_params.get("user", None)
+        if user_id:
+            queryset = queryset.filter(choristers__pk=user_id)
+
+        # Todo: refactor this into a general function
 
         return queryset
 
