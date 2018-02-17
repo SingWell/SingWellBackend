@@ -171,7 +171,7 @@ def ChoirRoster(request, choir_id):
         if request.method == "POST":
             user_id = request.POST["user_id"]
             choir = Choir.objects.get(id=choir_id)
-            user = User.objects.get(user_id=user_id)
+            user = User.objects.get(id=user_id)
             choir.choristers.add(user)
             choir.save()
 
