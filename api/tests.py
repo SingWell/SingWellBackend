@@ -24,7 +24,6 @@ class UserTestCase(TestCase):
 
     def test_onlyUsernameAndPasswordAreRequiredToCreateUser(self):
         response = c.post("/users/", {"username": "jake@smu.edu", "password": "password"})
-        print(response.content)
         self.assertIn(response.status_code, [200, 201])
 
 
@@ -139,6 +138,10 @@ class MusicRecordTestCase(TestCase):
             }
 
         MusicRecordSerializer().create(validated_data=musicRecordData)
+
+    def test_canGetMusicRecord(self):
+        response = c.get("/musicRecords/")
+        self.assertEqual(response.status_code, 200)
 
     def test_canPostMusicRecord(self):
         data = {

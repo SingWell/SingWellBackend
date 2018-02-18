@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from api.models import Organization, Choir, UserProfile, Event, MusicRecord
+from api.models import Organization, Choir, UserProfile, Event, MusicRecord, MusicResource
 from rest_framework.validators import UniqueValidator
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.compat import authenticate
@@ -14,6 +14,8 @@ class OrganizationSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         for field in validated_data:
             setattr(instance, field, validated_data.get(field, getattr(instance, field)))
+
+        instance.save()
 
         return instance
 
@@ -39,7 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('id', 'username','email', 'password', 'first_name', 'last_name', 'admin_of_organizations', 'owned_organizations', 'choirs', "member_of_organizations")
 
-
+        
     def get_organizations(self, user):
         choirs = user.choirs.all()
         orgs = set()
@@ -53,6 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
             validated_data.get("email"),validated_data.get("password"),
             first_name=validated_data.get("first_name", ""), last_name=validated_data.get("last_name", ""))
         return user
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d','%m-%d-%Y'])
@@ -80,6 +83,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     #         bio=validated_data['bio'], city = validated_data['city'],
     #         zip_code = validated_data['zip_code'], state = validated_data['state'],)
     #     return user_profile
+
+
 class ChoirSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
     choristers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
@@ -107,6 +112,13 @@ class MusicRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = MusicRecord
         fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization")
+
+
+class MusicResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MusicResource
+        fields = ("id", "type", "field", "music_record")
+
 
 #overriding default AuthTokenSerializer in Django Rest Auth Token extension
 class AuthTokenSerializer(serializers.Serializer):

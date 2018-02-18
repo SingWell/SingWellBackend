@@ -129,3 +129,11 @@ class MusicRecord(models.Model):
     def __unicode__(self):
         return f"{self.title}"
 
+
+class MusicResource(models.Model):
+    """Represents a basic resource, a type and data that goes in that type"""
+    type = models.CharField(max_length=100, null=False, blank=False)
+    field = models.CharField(max_length=3000, null=False, blank=False)
+
+    music_record = models.ForeignKey(MusicRecord)
+
