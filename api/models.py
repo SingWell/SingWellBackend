@@ -133,7 +133,17 @@ class MusicRecord(models.Model):
 class MusicResource(models.Model):
     """Represents a basic resource, a type and data that goes in that type"""
     type = models.CharField(max_length=100, null=False, blank=False)
-    field = models.CharField(max_length=3000, null=False, blank=False)
-
+    title = models.CharField(max_length= 100, null=False,blank=False, default='Title')
     music_record = models.ForeignKey(MusicRecord)
+    # class Meta:
+    #     abstract=True
+class FileResource(MusicResource):
+    file_name = models.CharField(max_length=300, null=False, blank=False)
+    file_type = models.CharField(max_length=10, null=False, blank=False)
+    def _get_class(self):
+        return self.__class__
 
+class TextResource(MusicResource):
+    field = models.CharField(max_length=3000, null=False, blank=False)
+    def _get_class(self):
+        return self.__class__  
