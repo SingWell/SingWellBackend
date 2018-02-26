@@ -1,4 +1,4 @@
-from api.models import Organization, Choir, Event, MusicRecord, UserProfile, MusicResource
+from api.models import Organization, Choir, Event, MusicRecord, UserProfile, MusicResource, FileResource,TextResource
 from django.contrib.auth.models import User
 from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, EventSerializer, MusicRecordSerializer, AuthTokenSerializer, MusicResourceSerializer
 from rest_framework import generics, status,parsers, renderers
@@ -9,6 +9,10 @@ from api.permissions import IsOwner,IsAdmin, IsChorister
 from rest_framework.permissions import AllowAny
 from rest_framework.schemas import  ManualSchema
 from rest_framework.views import APIView
+from django.http import HttpResponse
+from django.conf import settings
+import boto3
+import io
 import coreapi
 import coreschema
 
@@ -244,3 +248,55 @@ class MusicResourceDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicResourceSerializer
     permission_classes = ()
     queryset = MusicResource.objects.all()
+
+
+#TODO : Do this in a DRest way
+@api_view(["GET", "POST"])
+@permission_classes((AllowAny,))
+def MusicResourceUpDown(request):
+    if request.method=='POST':
+        
+        aws_a_k_i = getattr(settings, "AWS_ACCESS_KEY_ID")
+        aws_s_a_k = getattr(settings, "AWS_SECRET_KEY")
+        s3 = boto3.client('s3',
+                          aws_access_key_id=aws_a_k_i,
+                          aws_secret_access_key=aws_s_a_k,)
+        if request.POST['type'] == 'file':
+            for key in request.FILES:
+                filedata= request.FILES[key]
+                record_id = request.POST['record_id']
+                filename = '{0}/{1}'.format(record_id,key)
+                s3.upload_fileobj(filedata, 'singwell', filename)
+                object_url = "https://s3.amazonaws.com/singwell/{}".format(filename)
+                try: 
+                    file_resource,created = FileResource.objects.get_or_create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file')
+                    file_resource.save()
+                except Exception as e: 
+                    print(e)
+                    return HttpResponse(status= 400)
+                return HttpResponse(status= 201)
+        else: 
+            return HttpResponse(status=404)
+        # else:
+        #     text_resource=FileResource.objects.get_or_create(title=)
+    if request.method=='GET':
+        aws_a_k_i = getattr(settings, "AWS_ACCESS_KEY_ID")
+        aws_s_a_k = getattr(settings, "AWS_SECRET_KEY")
+
+        s3 = boto3.client('s3',
+                          aws_access_key_id=aws_a_k_i,
+                          aws_secret_access_key=aws_s_a_k,)
+        
+        filename = request.query_params.get('filename',None)
+        record_id = request.query_params.get('record_id',None)
+        try: 
+            resource = MusicResource.objects.get(title=filename, music_record_id = record_id)
+        except Exception as e:
+            print(e)
+            return HttpResponse("{} does not exist associated with this record id".format(filename), status=404)
+        if resource.type == 'file' :
+            file_key = '{0}/{1}'.format(record_id,filename)
+            filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
+            s3.download_fileobj(Bucket="singwell", Key=file_key, Fileobj=filedata)  # download file from S3
+            filedata.seek(0)  # the IO object has its file pointer pointing to the end of the file, so move it
+            return HttpResponse(filedata,status=200)
