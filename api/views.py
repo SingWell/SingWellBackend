@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.conf import settings
 import boto3
+import mimetypes
 import io
 import coreapi
 import coreschema
@@ -299,4 +300,10 @@ def MusicResourceUpDown(request):
             filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
             s3.download_fileobj(Bucket="singwell", Key=file_key, Fileobj=filedata)  # download file from S3
             filedata.seek(0)  # the IO object has its file pointer pointing to the end of the file, so move it
-            return HttpResponse(filedata,status=200)
+            
+            response = HttpResponse(filedata, status=200)
+            response["Content-Type"] = resource.fileresource.file_type
+            
+            response["Content-Disposition"] = 'inline; filename="{}"'.format(filename)
+
+            return response
