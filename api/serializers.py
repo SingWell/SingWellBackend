@@ -24,52 +24,21 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "address", "phone_number", "email", "description", "created_date", "owner", "admins", "website_url")
 
 
-class UserSerializer(serializers.ModelSerializer):
-    owned_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    admin_of_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    member_of_organizations = serializers.SerializerMethodField(method_name="get_organizations", read_only=True)
-
-    email = serializers.EmailField(required=False,validators=[UniqueValidator(queryset=User.objects.all())])
-    username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all())], required=True)
-    password = serializers.CharField(min_length=8, write_only=True)
-    first_name = serializers.CharField(min_length=2, max_length= 25, required=False)
-    last_name = serializers.CharField(min_length=2, max_length= 25, required=False)
-
-
-    class Meta:
-        model = User
-        fields = ('id', 'username','email', 'password', 'first_name', 'last_name', 'admin_of_organizations', 'owned_organizations', 'choirs', "member_of_organizations")
-
-        
-    def get_organizations(self, user):
-        choirs = user.choirs.all()
-        orgs = set()
-        for choir in choirs:
-            orgs.add(choir.organization_id)
-
-        return list(orgs)
-
-    def create(self,validated_data):
-        user = User.objects.create_user(validated_data.get("username"),
-            validated_data.get("email"),validated_data.get("password"),
-            first_name=validated_data.get("first_name", ""), last_name=validated_data.get("last_name", ""))
-        return user
-
-
 class UserProfileSerializer(serializers.ModelSerializer):
-    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d','%m-%d-%Y'])
+    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d','%m-%d-%Y', '%m/%d', '%m/%d/%Y','%Y/%m/%d', '%Y-%m-%d'])
     age=serializers.SerializerMethodField(method_name='calculate_age')
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+    phone_number = serializers.CharField(required=False)
+
     class Meta:
         model = UserProfile
         fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age') 
+
     def create(self, validated_data):
-        user = self.context['request'].user
-        user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data.get("date_of_birth", None),
-            phone_number=validated_data.get("phone_number", None), address=validated_data.get("address", None),
-            bio=validated_data.get("bio", None), city = validated_data("city", None),
-            zip_code = validated_data.get("zip_code", None), state = validated_data.get("state", None),)
+        user = validated_data.pop("user", None)
+        user_profile = UserProfile.objects.create(user=user, **validated_data)
         return user_profile
+
     def calculate_age(self,instance):
         if instance.date_of_birth is not None:
             if datetime.datetime.now().year - instance.date_of_birth.year>116:
@@ -83,6 +52,60 @@ class UserProfileSerializer(serializers.ModelSerializer):
     #         bio=validated_data['bio'], city = validated_data['city'],
     #         zip_code = validated_data['zip_code'], state = validated_data['state'],)
     #     return user_profile
+
+
+class UserSerializer(serializers.ModelSerializer):
+    owned_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    admin_of_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    member_of_organizations = serializers.SerializerMethodField(method_name="get_organizations", read_only=True)
+
+    email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=User.objects.all())])
+    password = serializers.CharField(min_length=8, write_only=True)
+    first_name = serializers.CharField(min_length=2, max_length=25, required=False)
+    last_name = serializers.CharField(min_length=2, max_length=25, required=False)
+
+    profile = UserProfileSerializer(required=False)
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'password', 'first_name', 'last_name', 'admin_of_organizations',
+                  'owned_organizations', 'choirs', "member_of_organizations", "profile")
+
+    def get_organizations(self, user):
+        choirs = user.choirs.all()
+        orgs = set()
+        for choir in choirs:
+            orgs.add(choir.organization_id)
+
+        return list(orgs)
+
+    def create(self, validated_data):
+        user = User.objects.create_user(validated_data.pop("email"), validated_data.pop("password"),
+                                        first_name=validated_data.pop("first_name", ""),
+                                        last_name=validated_data.pop("last_name", ""))
+        user.save()
+        if "profile" in validated_data and type(validated_data) == dict:
+            validated_data["profile"]["user"] = user
+        else:
+            validated_data["profile"] = dict(user=user)
+        user_profile = UserProfile.objects.create(**validated_data["profile"])
+        user_profile.save()
+
+        return user
+
+    def update(self, user, validated_data):
+        for key, value in validated_data.items():
+            if key != "profile":
+                setattr(user, key, value)
+            else:
+                for profile_key in validated_data["profile"]:
+                    setattr(user.profile, profile_key, validated_data["profile"][profile_key])
+
+        user.profile.save()
+        user.save()
+
+        return user
 
 
 class ChoirSerializer(serializers.ModelSerializer):
