@@ -89,7 +89,7 @@ class UserProfile(models.Model):
     address = models.CharField(max_length=100, null=True)
     city = models.CharField(max_length=100, null=True)
     zip_code = models.CharField(max_length=5, null=True)
-    phone_number = models.CharField(max_length=10, null=True)
+    phone_number = models.CharField(max_length=30, null=True)
     state = models.CharField(max_length=20, null=True)
     date_of_birth = models.DateField(null=True, blank=True)
     @property
