@@ -230,6 +230,17 @@ class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicRecordSerializer
     permission_classes = ()
     queryset = MusicRecord.objects.all()
+    def retrieve(self,request,pk):
+        try:
+            music_record = MusicRecord.objects.get(id=pk)
+        except:
+            return Response(status=404)
+        serializer = self.serializer_class(music_record)
+        # serializer.is_valid(raise_exception=True)
+        json = serializer.data
+        json['music_resources'] = [resource.id for resource in MusicResource.objects.filter(music_record_id=pk)]
+        return Response(json, status= 200) 
+
 
 
 class MusicResourceList(generics.ListCreateAPIView):
@@ -270,7 +281,7 @@ def MusicResourceUpDown(request):
                 s3.upload_fileobj(filedata, 'singwell', filename)
                 object_url = "https://s3.amazonaws.com/singwell/{}".format(filename)
                 try: 
-                    file_resource,created = FileResource.objects.get_or_create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file')
+                    file_resource = FileResource.objects.create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file')
                     file_resource.save()
                 except Exception as e: 
                     print(e)
@@ -288,15 +299,15 @@ def MusicResourceUpDown(request):
                           aws_access_key_id=aws_a_k_i,
                           aws_secret_access_key=aws_s_a_k,)
         
-        filename = request.query_params.get('filename',None)
+        resource_id = request.query_params.get('resource_id',None)
         record_id = request.query_params.get('record_id',None)
         try: 
-            resource = MusicResource.objects.get(title=filename, music_record_id = record_id)
+            resource = MusicResource.objects.get(id=resource_id, music_record_id = record_id)
         except Exception as e:
             print(e)
-            return HttpResponse("{} does not exist associated with this record id".format(filename), status=404)
+            return HttpResponse("File with id #{} does not exist associated with this record id".format(resource_id), status=404)
         if resource.type == 'file' :
-            file_key = '{0}/{1}'.format(record_id,filename)
+            file_key = '{0}/{1}'.format(record_id,resource.title)
             filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
             s3.download_fileobj(Bucket="singwell", Key=file_key, Fileobj=filedata)  # download file from S3
             filedata.seek(0)  # the IO object has its file pointer pointing to the end of the file, so move it
@@ -304,6 +315,6 @@ def MusicResourceUpDown(request):
             response = HttpResponse(filedata, status=200)
             response["Content-Type"] = resource.fileresource.file_type
             
-            response["Content-Disposition"] = 'inline; filename="{}"'.format(filename)
+            response["Content-Disposition"] = 'inline; filename="{}"'.format(resource.title)
 
             return response
