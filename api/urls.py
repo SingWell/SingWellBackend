@@ -34,6 +34,8 @@ urlpatterns = [
     url(r'^musicResources/$', views.MusicResourceList.as_view(), name="Music Resource List"),
     url(r'^musicResources/(?P<pk>[0-9]+)/$', views.MusicResourceDetail.as_view(), name="Music Resource Detail"),
     url(r'^resource/$', views.MusicResourceUpDown, name="Music Resource List upload download"),
+    url(r'^parse/$', views.LibraryUpload, name="Library Upload and parse"),
+
 
     ### User endpoints
     url(r'^users/$', views.UserList.as_view(), name="User List"),
