@@ -49,7 +49,7 @@ class UserList(generics.ListCreateAPIView):
     serializer_class = UserSerializer
 
 
-class UserDetail(generics.RetrieveAPIView):
+class UserDetail(generics.RetrieveUpdateAPIView):
     permission_classes= ()
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -65,7 +65,7 @@ class UserCreate(generics.GenericAPIView):
             user = serializer.save()
             if user:
                 token = Token.objects.create(user=user)
-                user_profile = UserProfile.objects.create(user=user)
+                user.save()
                 json = serializer.data
                 json['token']= token.key
                 return Response(json, status= status.HTTP_201_CREATED)
