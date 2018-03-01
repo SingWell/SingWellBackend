@@ -16,6 +16,8 @@ import mimetypes
 import io
 import coreapi
 import coreschema
+import base64
+from api.parse_library import parse_library
 
 def _filter_queryset_(queryset, params):
     pass
@@ -238,7 +240,7 @@ class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.serializer_class(music_record)
         # serializer.is_valid(raise_exception=True)
         json = serializer.data
-        json['music_resources'] = [resource.id for resource in MusicResource.objects.filter(music_record_id=pk)]
+        json['music_resources'] = [{'resource_id':resource.id, 'type':resource.type, 'extension':(resource.fileresource.file_type if resource.type=='file' else 'NOT_APPLICABLE')} for resource in MusicResource.objects.filter(music_record_id=pk)]
         return Response(json, status= 200) 
 
 
@@ -311,10 +313,47 @@ def MusicResourceUpDown(request):
             filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
             s3.download_fileobj(Bucket="singwell", Key=file_key, Fileobj=filedata)  # download file from S3
             filedata.seek(0)  # the IO object has its file pointer pointing to the end of the file, so move it
-            
-            response = HttpResponse(filedata, status=200)
+            response = HttpResponse(base64.b64encode(filedata.getvalue()), status=200)
             response["Content-Type"] = resource.fileresource.file_type
             
             response["Content-Disposition"] = 'inline; filename="{}"'.format(resource.title)
 
             return response
+
+
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def LibraryUpload(request):
+    if request.method=="POST":
+        for key in request.FILES:
+            filedata= request.FILES[key]
+            organization_id = request.POST['organization_id']
+            if (parse_library(filedata, organization_id)) ==True:
+                return HttpResponse(status=201)
+            else :
+                return HttpResponse(status=400)
+
+# @api_view(["POST"])
+# @permission_classes((AllowAny,))
+# def ProfilePictureUpload(request):
+#     if request.method=='POST':
+#         aws_a_k_i = getattr(settings, "AWS_ACCESS_KEY_ID")
+#         aws_s_a_k = getattr(settings, "AWS_SECRET_KEY")
+#         s3 = boto3.client('s3',
+#                         aws_access_key_id=aws_a_k_i,
+#                         aws_secret_access_key=aws_s_a_k,)
+#         for key in request.FILES:
+#             filedata=request.FILES[key]
+            
+#             user_id = request.POST['user_id']
+#             try: 
+#                 user_profile = UserProfile.objects.get(user_id=user_id)
+#                 user_profile.profile_picture_link = "https://s3.amazonaws.com/singwell/{}".format(filename) 
+#             except:
+#                 return HttpResponse(status=404)
+#             filename = '{0}/{1}'.format(user_id,key)
+#             s3.upload_fileobj(filedata, 'singwell', filename)
+#             object_url = "https://s3.amazonaws.com/singwell/{}".format(filename)
+#             return HttpResponse(status=201)
+    
