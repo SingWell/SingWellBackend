@@ -1,9 +1,6 @@
 from django.db import models
-from django import forms
 from django.contrib.auth.models import User
 from datetime import datetime
-
-	
 
 #Used to identify choir meeting times
 WEEKDAYS = [
@@ -103,7 +100,7 @@ class Event(models.Model):
     time = models.TimeField(null=True)
     location = models.CharField(max_length=200, null=True, blank=True)
     choirs = models.ManyToManyField(Choir, related_name="events")
-    programmed_music = models.ManyToManyField("MusicRecord")
+    program_music = models.ManyToManyField("MusicRecord", through="ProgramField")
 
     organization = models.ForeignKey(Organization)
 
@@ -112,6 +109,12 @@ class Event(models.Model):
 
     def __unicode__(self):
         return f"{self.name}"
+
+
+class ProgramField(models.Model):
+    event = models.ForeignKey(Event)
+    music_record = models.ForeignKey("MusicRecord")
+    order = models.IntegerField(unique=True)
 
 
 class MusicRecord(models.Model):

@@ -98,6 +98,7 @@ class UserEdit(generics.RetrieveUpdateAPIView):
         else :
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+
 class UserLogin(APIView):
     serializer_class = AuthTokenSerializer
     throttle_classes = ()

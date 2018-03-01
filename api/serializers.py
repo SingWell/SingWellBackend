@@ -1,11 +1,12 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from api.models import Organization, Choir, UserProfile, Event, MusicRecord, MusicResource
+from api.models import Organization, Choir, UserProfile, Event, MusicRecord, MusicResource, ProgramField
 from rest_framework.validators import UniqueValidator
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.compat import authenticate
 import datetime
 from django.shortcuts import get_object_or_404
+
 
 class OrganizationSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
@@ -54,6 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(validated_data.get("username"),
             validated_data.get("email"),validated_data.get("password"),
             first_name=validated_data.get("first_name", ""), last_name=validated_data.get("last_name", ""))
+        user.save()
         return user
 
 
@@ -97,21 +99,32 @@ class ChoirSerializer(serializers.ModelSerializer):
                   "organization", "organization_name", "description")
 
 
-class EventSerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
-    choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=False, queryset=Choir.objects.all())
-
-    class Meta:
-        model = Event
-        fields = ("id", "name", "date", "time", "location", "choirs", "organization")
-
-
 class MusicRecordSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
 
     class Meta:
         model = MusicRecord
         fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization")
+
+
+
+class ProgramFieldSerializer(serializers.ModelSerializer):
+    event = serializers.PrimaryKeyRelatedField(many=False, queryset=Event.objects.all())
+    music_record = MusicRecordSerializer(read_only=True)
+
+    class Meta:
+        model = ProgramField
+        fields = ("event", "music_record", "order")
+
+
+class EventSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
+    choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=False, queryset=Choir.objects.all())
+    program_music = ProgramFieldSerializer(many=True, source="programfield_set")
+
+    class Meta:
+        model = Event
+        fields = ("id", "name", "date", "time", "location", "choirs", "organization", "program_music")
 
 
 class MusicResourceSerializer(serializers.ModelSerializer):
