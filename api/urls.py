@@ -39,6 +39,8 @@ urlpatterns = [
     url(r'^musicResources/$', views.MusicResourceList.as_view(), name="Music Resource List"),
     url(r'^musicResources/(?P<pk>[0-9]+)/$', views.MusicResourceDetail.as_view(), name="Music Resource Detail"),
     url(r'^resource/$', views.MusicResourceUpDown, name="Music Resource List upload download"),
+    url(r'^parse/$', views.LibraryUpload, name="Library Upload and parse"),
+
 
     ### User endpoints
     url(r'^users/$', views.UserList.as_view(), name="User List"),
@@ -46,6 +48,8 @@ urlpatterns = [
     url(r'^login/$', views.UserLogin.as_view(), name='Login'),
     url(r'^register/$', views.UserCreate.as_view(), name='Register'),
     url(r'^profile/$', views.UserEdit.as_view(), name='Get User info/Edit User'),
+    url(r'^profilePictures/$', views.ProfilePicture, name="Profile pic upload"),
+    
 
     ## Choirs for a user
     url(r'users/(?P<user_id>[0-9]+)/choirs/$', views.ChoirsForUser, name="Choirs for User")

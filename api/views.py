@@ -19,6 +19,8 @@ import io
 import coreapi
 import coreschema
 import json
+import base64
+from api.parse_library import parse_library
 
 
 class OrganizationList(generics.ListCreateAPIView):
@@ -47,7 +49,7 @@ class UserList(generics.ListCreateAPIView):
     serializer_class = UserSerializer
 
 
-class UserDetail(generics.RetrieveAPIView):
+class UserDetail(generics.RetrieveUpdateAPIView):
     permission_classes= ()
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -63,7 +65,7 @@ class UserCreate(generics.GenericAPIView):
             user = serializer.save()
             if user:
                 token = Token.objects.create(user=user)
-                user_profile = UserProfile.objects.create(user=user)
+                user.save()
                 json = serializer.data
                 json['token']= token.key
                 return Response(json, status=status.HTTP_201_CREATED)
@@ -268,6 +270,17 @@ class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicRecordSerializer
     permission_classes = ()
     queryset = MusicRecord.objects.all()
+    def retrieve(self,request,pk):
+        try:
+            music_record = MusicRecord.objects.get(id=pk)
+        except:
+            return Response(status=404)
+        serializer = self.serializer_class(music_record)
+        # serializer.is_valid(raise_exception=True)
+        json = serializer.data
+        json['music_resources'] = [{'resource_id':resource.id, 'type':resource.type, 'extension':(resource.fileresource.file_type if resource.type=='file' else 'NOT_APPLICABLE')} for resource in MusicResource.objects.filter(music_record_id=pk)]
+        return Response(json, status= 200) 
+
 
 
 class MusicResourceList(generics.ListCreateAPIView):
@@ -308,7 +321,7 @@ def MusicResourceUpDown(request):
                 s3.upload_fileobj(filedata, 'singwell', filename)
                 object_url = "https://s3.amazonaws.com/singwell/{}".format(filename)
                 try: 
-                    file_resource,created = FileResource.objects.get_or_create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file')
+                    file_resource = FileResource.objects.create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file')
                     file_resource.save()
                 except Exception as e: 
                     print(e)
@@ -326,22 +339,81 @@ def MusicResourceUpDown(request):
                           aws_access_key_id=aws_a_k_i,
                           aws_secret_access_key=aws_s_a_k,)
         
-        filename = request.query_params.get('filename',None)
+        resource_id = request.query_params.get('resource_id',None)
         record_id = request.query_params.get('record_id',None)
         try: 
-            resource = MusicResource.objects.get(title=filename, music_record_id = record_id)
+            resource = MusicResource.objects.get(id=resource_id, music_record_id = record_id)
         except Exception as e:
             print(e)
-            return HttpResponse("{} does not exist associated with this record id".format(filename), status=404)
+            return HttpResponse("File with id #{} does not exist associated with this record id".format(resource_id), status=404)
         if resource.type == 'file' :
-            file_key = '{0}/{1}'.format(record_id,filename)
+            file_key = '{0}/{1}'.format(record_id,resource.title)
             filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
             s3.download_fileobj(Bucket="singwell", Key=file_key, Fileobj=filedata)  # download file from S3
             filedata.seek(0)  # the IO object has its file pointer pointing to the end of the file, so move it
-            
-            response = HttpResponse(filedata, status=200)
+            response = HttpResponse(base64.b64encode(filedata.getvalue()), status=200)
             response["Content-Type"] = resource.fileresource.file_type
             
-            response["Content-Disposition"] = 'inline; filename="{}"'.format(filename)
+            response["Content-Disposition"] = 'inline; filename="{}"'.format(resource.title)
 
             return response
+
+
+
+@api_view(["POST"])
+@permission_classes((AllowAny,))
+def LibraryUpload(request):
+    if request.method=="POST":
+        for key in request.FILES:
+            filedata= request.FILES[key]
+            organization_id = request.POST['organization_id']
+            if (parse_library(filedata, organization_id)) ==True:
+                return HttpResponse(status=201)
+            else :
+                return HttpResponse(status=400)
+
+@api_view(["GET", "POST"])
+@permission_classes((AllowAny,))
+def ProfilePicture(request):
+    if request.method=='POST':
+        aws_a_k_i = getattr(settings, "AWS_ACCESS_KEY_ID")
+        aws_s_a_k = getattr(settings, "AWS_SECRET_KEY")
+        s3 = boto3.client('s3',
+                        aws_access_key_id=aws_a_k_i,
+                        aws_secret_access_key=aws_s_a_k,)
+        for key in request.FILES:
+            filedata=request.FILES[key]
+            user_id = request.POST['user_id']
+            filename = '{0}/{1}'.format(user_id,key)
+            try: 
+                user_profile = UserProfile.objects.get(user_id=user_id)
+                user_profile.profile_picture_link = filename 
+                user_profile.save()
+            except:
+                return HttpResponse(status=404)
+            s3.upload_fileobj(filedata, 'singwell', filename)
+            return HttpResponse(status=201)
+    elif request.method=='GET':
+        aws_a_k_i = getattr(settings, "AWS_ACCESS_KEY_ID")
+        aws_s_a_k = getattr(settings, "AWS_SECRET_KEY")
+        s3 = boto3.client('s3',
+                        aws_access_key_id=aws_a_k_i,
+                        aws_secret_access_key=aws_s_a_k,)
+        user_id = request.query_params.get('user_id',None)
+        try: 
+            user_profile = UserProfile.objects.get(user_id=user_id)
+        except Exception as e:
+            print(e)
+            return HttpResponse("User does not exist", status=404)
+        if user_profile.profile_picture_link!=None :
+            filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
+            s3.download_fileobj(Bucket="singwell", Key=user_profile.profile_picture_link, Fileobj=filedata)  # download file from S3
+            filedata.seek(0)  # the IO object has its file pointer pointing to the end of the file, so move it
+            response = HttpResponse(base64.b64encode(filedata.getvalue()), status=200)
+            response["Content-Type"] = user_profile.profile_picture_link.split('.')[:-1]
+            
+            response["Content-Disposition"] = 'inline; filename="{}"'.format(user_profile.profile_picture_link)
+
+            return response
+        else:
+            return HttpResponse("User does not have picture uploaded", status=404)
