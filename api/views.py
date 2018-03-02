@@ -1,6 +1,8 @@
-from api.models import Organization, Choir, Event, MusicRecord, UserProfile, MusicResource, FileResource,TextResource
+from api.models import Organization, Choir, Event, MusicRecord, UserProfile, MusicResource, FileResource, TextResource, \
+    ProgramField
 from django.contrib.auth.models import User
-from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, EventSerializer, MusicRecordSerializer, AuthTokenSerializer, MusicResourceSerializer
+from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, \
+    EventSerializer, MusicRecordSerializer, AuthTokenSerializer, MusicResourceSerializer, ProgramFieldSerializer
 from rest_framework import generics, status,parsers, renderers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.models import Token
@@ -16,9 +18,7 @@ import mimetypes
 import io
 import coreapi
 import coreschema
-
-def _filter_queryset_(queryset, params):
-    pass
+import json
 
 
 class OrganizationList(generics.ListCreateAPIView):
@@ -66,7 +66,7 @@ class UserCreate(generics.GenericAPIView):
                 user_profile = UserProfile.objects.create(user=user)
                 json = serializer.data
                 json['token']= token.key
-                return Response(json, status= status.HTTP_201_CREATED)
+                return Response(json, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -213,6 +213,43 @@ class EventDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EventSerializer
     permission_classes = ()
     queryset = Event.objects.all()
+
+
+class EventProgramList(APIView):
+    permission_classes = ()
+
+    def get(self, request, pk):
+        try:
+            event = Event.objects.get(pk=pk)
+            ser = EventSerializer(event)
+            programs = [program_field for program_field in ser.data["program_music"]]
+            return Response(programs, status=status.HTTP_200_OK)
+        except Event.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+    def post(self, request, pk):
+        data = request.data
+
+        # return Response(data, status=status.HTTP_201_CREATED)
+        if type(request.data) == list:
+            for program_field in data:
+                program_field["event"] = pk
+        else:
+            data["event"] = 1
+
+        pf_ser = ProgramFieldSerializer(many=type(data)==list, data=data)
+        if pf_ser.is_valid():
+            pf = pf_ser.save()
+            return Response(pf, status=status.HTTP_201_CREATED)
+        else:
+            return Response(pf_ser.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProgramFieldDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ProgramFieldSerializer
+    permission_classes = ()
+    queryset = ProgramField.objects.all()
 
 
 class MusicRecordList(generics.ListCreateAPIView):
