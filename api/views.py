@@ -278,7 +278,7 @@ class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.serializer_class(music_record)
         # serializer.is_valid(raise_exception=True)
         json = serializer.data
-        json['music_resources'] = [{'resource_id':resource.id, 'type':resource.type, 'extension':(resource.fileresource.file_type if resource.type=='file' else 'NOT_APPLICABLE')} for resource in MusicResource.objects.filter(music_record_id=pk)]
+        json['music_resources'] = [{'resource_id':resource.id, 'title':resource.title, 'type':resource.type, 'extension':(resource.fileresource.file_type if resource.type=='file' else 'NOT_APPLICABLE')} for resource in MusicResource.objects.filter(music_record_id=pk)]
         return Response(json, status= 200) 
 
 
@@ -313,6 +313,8 @@ def MusicResourceUpDown(request):
         s3 = boto3.client('s3',
                           aws_access_key_id=aws_a_k_i,
                           aws_secret_access_key=aws_s_a_k,)
+        if 'type' not in request.POST or 'record_id' not in request.POST:
+            return HttpResponse('Type or record id not specified in request', status=403)
         if request.POST['type'] == 'file':
             for key in request.FILES:
                 filedata= request.FILES[key]
@@ -321,8 +323,10 @@ def MusicResourceUpDown(request):
                 s3.upload_fileobj(filedata, 'singwell', filename)
                 object_url = "https://s3.amazonaws.com/singwell/{}".format(filename)
                 try: 
-                    file_resource = FileResource.objects.create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file')
+                    file_resource, created = FileResource.objects.get_or_create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file')
                     file_resource.save()
+                    if created==False:
+                        return HttpResponse("File already exists", status=200)
                 except Exception as e: 
                     print(e)
                     return HttpResponse(status= 400)
@@ -364,6 +368,8 @@ def MusicResourceUpDown(request):
 @permission_classes((AllowAny,))
 def LibraryUpload(request):
     if request.method=="POST":
+        if 'organization_id' not in request.POST:
+            return HttpResponse('Not specified organization id in request', status=403)
         for key in request.FILES:
             filedata= request.FILES[key]
             organization_id = request.POST['organization_id']
@@ -376,6 +382,8 @@ def LibraryUpload(request):
 @permission_classes((AllowAny,))
 def ProfilePicture(request):
     if request.method=='POST':
+        if 'user_id' not in request.POST:
+            return HttpResponse('Not specified user id in request', status=403) 
         aws_a_k_i = getattr(settings, "AWS_ACCESS_KEY_ID")
         aws_s_a_k = getattr(settings, "AWS_SECRET_KEY")
         s3 = boto3.client('s3',
