@@ -1,11 +1,12 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from api.models import Organization, Choir, UserProfile, Event, MusicRecord, MusicResource
+from api.models import Organization, Choir, UserProfile, Event, MusicRecord, MusicResource, ProgramField
 from rest_framework.validators import UniqueValidator
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.compat import authenticate
 import datetime
 from django.shortcuts import get_object_or_404
+
 
 class OrganizationSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source="owner.id")
@@ -92,9 +93,28 @@ class UserSerializer(serializers.ModelSerializer):
             validated_data["profile"] = dict(user=user)
         user_profile = UserProfile.objects.create(**validated_data["profile"])
         user_profile.save()
-
         return user
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d', '%m-%d-%Y'])
+    age=serializers.SerializerMethodField(method_name='calculate_age')
+
+    class Meta:
+        model = UserProfile
+        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age') 
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data.get("date_of_birth", None),
+            phone_number=validated_data.get("phone_number", None), address=validated_data.get("address", None),
+            bio=validated_data.get("bio", None), city = validated_data("city", None),
+            zip_code = validated_data.get("zip_code", None), state = validated_data.get("state", None),)
+        return user_profile
+
+    def calculate_age(self,instance):
+        if instance.date_of_birth is not None:
+            if datetime.datetime.now().year - instance.date_of_birth.year>116:
+                return "Hidden"
     def update(self, user, validated_data):
         for key, value in validated_data.items():
             if key != "profile":
@@ -121,15 +141,6 @@ class ChoirSerializer(serializers.ModelSerializer):
                   "organization", "organization_name", "description")
 
 
-class EventSerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
-    choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=False, queryset=Choir.objects.all())
-
-    class Meta:
-        model = Event
-        fields = ("id", "name", "date", "time", "location", "choirs", "organization")
-
-
 class MusicRecordSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
 
@@ -138,25 +149,46 @@ class MusicRecordSerializer(serializers.ModelSerializer):
         fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization")
 
 
+class ProgramFieldSerializer(serializers.ModelSerializer):
+    event = serializers.PrimaryKeyRelatedField(many=False, queryset=Event.objects.all())
+    music_record = serializers.PrimaryKeyRelatedField(many=False, queryset=MusicRecord.objects.all())
+    title = serializers.CharField(source="music_record.title", read_only=True)
+    composer = serializers.CharField(source="music_record.composer", read_only=True)
+
+    class Meta:
+        model = ProgramField
+        fields = ("event", "music_record", "order", "notes", "title", "composer", "id")
+
+
+class EventSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
+    choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=False, queryset=Choir.objects.all())
+    program_music = ProgramFieldSerializer(many=True, source="programfield_set", read_only=True)
+
+    class Meta:
+        model = Event
+        fields = ("id", "name", "date", "time", "location", "choirs", "organization", "program_music")
+
+
 class MusicResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = MusicResource
         fields = ("id", "title", "music_record")
 
 
-#overriding default AuthTokenSerializer in Django Rest Auth Token extension
+# overriding default AuthTokenSerializer in Django Rest Auth Token extension
 class AuthTokenSerializer(serializers.Serializer):
     email = serializers.CharField(label=_("Email"))
     password = serializers.CharField(
         label=_("Password"),
         style={'input_type': 'password'},
         trim_whitespace=False
-    )
+        )
 
     def validate(self, attrs):
         email = attrs.get('email')
         password = attrs.get('password')
-        username = get_object_or_404(User,email=email)
+        username = get_object_or_404(User, email=email)
         if email and password:
             user = authenticate(request=self.context.get('request'),
                                 username=username, password=password)
