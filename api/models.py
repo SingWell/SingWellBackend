@@ -117,6 +117,7 @@ class ProgramField(models.Model):
     music_record = models.ForeignKey("MusicRecord")
     order = models.IntegerField()
     notes = models.CharField(max_length=2000, null=True)
+    field_title = models.CharField(max_length=500, null=False)
 
     def __str__(self):
         return f"{self.music_record.title}, event: {self.event.name}, order: {self.order}"
