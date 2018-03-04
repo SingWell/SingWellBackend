@@ -238,7 +238,7 @@ class EventProgramList(APIView):
             for program_field in data:
                 program_field["event"] = pk
         else:
-            data["event"] = 1
+            data["event"] = pk
 
         pf_ser = ProgramFieldSerializer(many=type(data)==list, data=data)
         if pf_ser.is_valid():
