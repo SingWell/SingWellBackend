@@ -157,7 +157,7 @@ class ProgramFieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProgramField
-        fields = ("event", "music_record", "order", "notes", "title", "composer", "id")
+        fields = ("event", "music_record", "field_title", "order", "notes", "title", "composer", "id")
 
 
 class EventSerializer(serializers.ModelSerializer):
