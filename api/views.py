@@ -18,6 +18,7 @@ import mimetypes
 import io
 import coreapi
 import coreschema
+from copy import deepcopy
 import json
 import base64
 from api.parse_library import parse_library
@@ -231,7 +232,7 @@ class EventProgramList(APIView):
 
 
     def post(self, request, pk):
-        data = request.data
+        data = deepcopy(request.data)
 
         # return Response(data, status=status.HTTP_201_CREATED)
         if type(request.data) == list:
@@ -242,8 +243,8 @@ class EventProgramList(APIView):
 
         pf_ser = ProgramFieldSerializer(many=type(data)==list, data=data)
         if pf_ser.is_valid():
-            pf = pf_ser.save()
-            return Response(pf, status=status.HTTP_201_CREATED)
+            pf_ser.save()
+            return Response(pf_ser.data, status=status.HTTP_201_CREATED)
         else:
             return Response(pf_ser.errors, status=status.HTTP_400_BAD_REQUEST)
 
