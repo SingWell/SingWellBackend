@@ -35,7 +35,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ('user', 'phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age',
                   'profile_picture_link')
 
-def create(self, validated_data):
+    def create(self, validated_data):
         user = validated_data.pop("user", None)
         user_profile = UserProfile.objects.create(user=user, **validated_data)
         return user_profile
