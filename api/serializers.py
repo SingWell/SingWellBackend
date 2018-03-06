@@ -26,14 +26,16 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d', '%m-%d-%Y'])
+    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d','%m-%d-%Y', '%m/%d', '%m/%d/%Y','%Y/%m/%d', '%Y-%m-%d'])
     age=serializers.SerializerMethodField(method_name='calculate_age')
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = UserProfile
-        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age')
+        fields = ('user', 'phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age',
+                  'profile_picture_link')
 
-    def create(self, validated_data):
+def create(self, validated_data):
         user = validated_data.pop("user", None)
         user_profile = UserProfile.objects.create(user=user, **validated_data)
         return user_profile
@@ -42,6 +44,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if instance.date_of_birth is not None:
             if datetime.datetime.now().year - instance.date_of_birth.year>116:
                 return "Hidden"
+            else:
+                return instance.age
 
 
 class UserSerializer(serializers.ModelSerializer):
