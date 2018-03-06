@@ -26,15 +26,12 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d','%m-%d-%Y', '%m/%d', '%m/%d/%Y','%Y/%m/%d', '%Y-%m-%d'])
+    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d', '%m-%d-%Y'])
     age=serializers.SerializerMethodField(method_name='calculate_age')
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
-    phone_number = serializers.CharField(required=False)
 
     class Meta:
         model = UserProfile
-        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age', 'profile_picture_link') 
-
+        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age')
 
     def create(self, validated_data):
         user = validated_data.pop("user", None)
@@ -45,15 +42,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         if instance.date_of_birth is not None:
             if datetime.datetime.now().year - instance.date_of_birth.year>116:
                 return "Hidden"
-            else:
-                return instance.age
-    # def update(self,validated_data):
-    #     user = self.context['request'].user
-    #     user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data['date_of_birth'],
-    #         phone_number=validated_data['phone_number'], address=validated_data['address'],
-    #         bio=validated_data['bio'], city = validated_data['city'],
-    #         zip_code = validated_data['zip_code'], state = validated_data['state'],)
-    #     return user_profile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -95,26 +83,7 @@ class UserSerializer(serializers.ModelSerializer):
         user_profile.save()
         return user
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    date_of_birth = serializers.DateField(format='%m-%d', input_formats=['%m-%d', '%m-%d-%Y'])
-    age=serializers.SerializerMethodField(method_name='calculate_age')
 
-    class Meta:
-        model = UserProfile
-        fields = ('user','phone_number', 'address', 'bio', 'city', 'zip_code', 'state', 'date_of_birth', 'age') 
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        user_profile = UserProfile.objects.create(user=user, date_of_birth = validated_data.get("date_of_birth", None),
-            phone_number=validated_data.get("phone_number", None), address=validated_data.get("address", None),
-            bio=validated_data.get("bio", None), city = validated_data("city", None),
-            zip_code = validated_data.get("zip_code", None), state = validated_data.get("state", None),)
-        return user_profile
-
-    def calculate_age(self,instance):
-        if instance.date_of_birth is not None:
-            if datetime.datetime.now().year - instance.date_of_birth.year>116:
-                return "Hidden"
     def update(self, user, validated_data):
         for key, value in validated_data.items():
             if key != "profile":
