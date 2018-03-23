@@ -119,7 +119,7 @@ class MusicRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MusicRecord
-        fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization")
+        fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization", "source")
 
 
 class ProgramFieldSerializer(serializers.ModelSerializer):
