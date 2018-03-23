@@ -132,6 +132,7 @@ class MusicRecord(models.Model):
     arranger = models.CharField(max_length=200, null=True, blank=True)
     publisher = models.CharField(max_length=200, null=True, blank=True)
     instrumentation = models.CharField(max_length=500, null=True, blank=True)
+    source = models.CharField(max_length=200, null=True, blank=True)
 
     organization = models.ForeignKey(Organization)
 
@@ -146,6 +147,7 @@ class MusicResource(models.Model):
     """Represents a basic resource, a type and data that goes in that type"""
     type = models.CharField(max_length=100, null=False, blank=False)
     title = models.CharField(max_length= 100, null=False,blank=False, default='Title')
+    description = models.CharField(max_length=300, null=True, blank=True)
     music_record = models.ForeignKey(MusicRecord)
     # class Meta:
     #     abstract=True

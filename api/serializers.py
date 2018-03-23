@@ -146,7 +146,7 @@ class EventSerializer(serializers.ModelSerializer):
 class MusicResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = MusicResource
-        fields = ("id", "title", "music_record")
+        fields = ("id", "title", "music_record", "description")
 
 
 # overriding default AuthTokenSerializer in Django Rest Auth Token extension

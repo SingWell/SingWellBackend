@@ -279,7 +279,7 @@ class MusicRecordDetail(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.serializer_class(music_record)
         # serializer.is_valid(raise_exception=True)
         json = serializer.data
-        json['music_resources'] = [{'resource_id':resource.id, 'title':resource.title, 'type':resource.type, 'extension':(resource.fileresource.file_type if resource.type=='file' else 'NOT_APPLICABLE')} for resource in MusicResource.objects.filter(music_record_id=pk)]
+        json['music_resources'] = [{'url':(resource.textresource.field if resource.type=='youtube_link' else 'NOT APPLICABLE'), 'description':resource.description, 'resource_id':resource.id, 'title':resource.title, 'type':resource.type, 'extension':(resource.fileresource.file_type if resource.type=='file' else 'NOT_APPLICABLE')} for resource in MusicResource.objects.filter(music_record_id=pk)]
         return Response(json, status= 200) 
 
 
@@ -316,15 +316,18 @@ def MusicResourceUpDown(request):
                           aws_secret_access_key=aws_s_a_k,)
         if 'type' not in request.POST or 'record_id' not in request.POST:
             return HttpResponse('Type or record id not specified in request', status=403)
+        record_id = request.POST['record_id']
+        description = None
+        if 'description' in request.POST:
+            description = request.POST['description']
         if request.POST['type'] == 'file':
             for key in request.FILES:
                 filedata= request.FILES[key]
-                record_id = request.POST['record_id']
                 filename = '{0}/{1}'.format(record_id,key)
                 s3.upload_fileobj(filedata, 'singwell', filename)
                 object_url = "https://s3.amazonaws.com/singwell/{}".format(filename)
                 try: 
-                    file_resource, created = FileResource.objects.get_or_create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file')
+                    file_resource, created = FileResource.objects.get_or_create(file_name=filename, file_type=key.split('.')[-1],title=key, music_record_id= record_id, type='file', description = description)
                     file_resource.save()
                     if created==False:
                         return HttpResponse("File already exists", status=200)
@@ -332,6 +335,17 @@ def MusicResourceUpDown(request):
                     print(e)
                     return HttpResponse(status= 400)
                 return HttpResponse(status= 201)
+        elif request.POST['type'] == 'youtube_link':
+            url = request.POST['url']
+            title = request.POST['title']
+            try:
+                text_resource, created = TextResource.objects.get_or_create(title = title, music_record_id = record_id, type='youtube_link', field=url, description=description)
+                if created==False:
+                    return HttpResponse("Link already exists", status=200)
+                text_resource.save()
+            except Exception as e:
+                return HttpResponse(e, status=400)
+            return HttpResponse(status=201)
         else: 
             return HttpResponse(status=404)
         # else:
@@ -350,7 +364,7 @@ def MusicResourceUpDown(request):
             resource = MusicResource.objects.get(id=resource_id, music_record_id = record_id)
         except Exception as e:
             print(e)
-            return HttpResponse("File with id #{} does not exist associated with this record id".format(resource_id), status=404)
+            return HttpResponse("Resource with id #{} does not exist associated with this record id".format(resource_id), status=404)
         if resource.type == 'file' :
             file_key = '{0}/{1}'.format(record_id,resource.title)
             filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
@@ -362,6 +376,8 @@ def MusicResourceUpDown(request):
             response["Content-Disposition"] = 'inline; filename="{}"'.format(resource.title)
 
             return response
+        if resource.type=='youtube_link':
+            return Response({'url':resource.textresource.field, 'title':resource.title, 'type':resource.type, 'description':resource.description}, status=200)
 
 
 
