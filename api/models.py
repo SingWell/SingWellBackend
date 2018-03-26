@@ -34,6 +34,7 @@ class Organization(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     owner = models.ForeignKey(User, related_name="owned_organizations")
     admins = models.ManyToManyField(User, related_name="admin_of_organizations")
+    members = models.ManyToManyField(User, related_name="organizations")
 
     website_url = models.CharField(max_length=2000, blank=True, null=True)
 
@@ -51,6 +52,7 @@ class Choir(models.Model):
     meeting_day_start_hour = models.TimeField(null=False)
     meeting_day_end_hour = models.TimeField(null=True)
     description = models.TextField(null=True, blank=True)
+    director = models.ForeignKey(User)
 
     # perform_day = models.IntegerField(choices=WEEKDAYS, null=True, blank=True)
     # perform_day_start_hour = models.TimeField(null=True)
@@ -90,6 +92,7 @@ class UserProfile(models.Model):
     state = models.CharField(max_length=20, null=True)
     date_of_birth = models.DateField(null=True, blank=True)
     profile_picture_link = models.CharField(null=True, blank=True, max_length= 255)
+
     @property
     def age(self):
         return datetime.today().year - self.date_of_birth.year - ((datetime.today().month, datetime.today().day) < (self.date_of_birth.month, self.date_of_birth.day))
@@ -101,7 +104,7 @@ class Event(models.Model):
     time = models.TimeField(null=True)
     location = models.CharField(max_length=200, null=True, blank=True)
     choirs = models.ManyToManyField(Choir, related_name="events")
-    program_music = models.ManyToManyField("MusicRecord", through="ProgramField")
+    program_music = models.ManyToManyField("MusicRecord", through="ProgramField", related_name="events")
 
     organization = models.ForeignKey(Organization)
 

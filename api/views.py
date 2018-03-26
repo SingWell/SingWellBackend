@@ -38,11 +38,13 @@ class OrganizationList(generics.ListCreateAPIView):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
 
+
 class OrganizationDetail(generics.RetrieveUpdateDestroyAPIView):
     #permission_classes = (IsAdmin,IsOwner)
     permission_classes= ()
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+
 
 class UserList(generics.ListCreateAPIView):
     permission_classes= ()
@@ -168,18 +170,22 @@ class ChoirDetail(generics.RetrieveUpdateDestroyAPIView):
 
 @api_view(["GET", "POST"])
 @permission_classes((AllowAny,))
-def ChoirRoster(request, choir_id):
+def ChoirRoster(request, pk):
     # TODO: Figure out how to do this in a rest framework way
     """Retrieve the roster for a choir or add a user to a choir."""
+    try:
+        choir = Choir.objects.get(id=pk)
+    except Choir.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     if request.method == "GET":
-        choir = Choir.objects.get(id=choir_id)
         roster = choir.choristers
         serializer = UserSerializer(roster, many=True)
         return Response(serializer.data)
     else:
         if request.method == "POST":
             user_id = request.data.get("user_id", None)
-            choir = Choir.objects.get(id=choir_id)
+            choir = Choir.objects.get(id=pk)
             user = User.objects.get(id=user_id)
             choir.choristers.add(user)
             choir.save()
@@ -187,6 +193,17 @@ def ChoirRoster(request, choir_id):
             serializer = ChoirSerializer(choir)
 
             return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes((AllowAny,))
+def EventsForChoir(request, pk):
+    try:
+        choir = Choir.objects.get(pk=pk)
+    except Choir.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    return Response(EventSerializer(choir.events, many=True).data)
 
 
 @api_view(["GET"])
@@ -430,7 +447,7 @@ def ProfilePicture(request):
         except Exception as e:
             print(e)
             return HttpResponse("User does not exist", status=404)
-        if user_profile.profile_picture_link!=None :
+        if user_profile.profile_picture_link is not None :
             filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
             s3.download_fileobj(Bucket="singwell", Key=user_profile.profile_picture_link, Fileobj=filedata)  # download file from S3
             filedata.seek(0)  # the IO object has its file pointer pointing to the end of the file, so move it

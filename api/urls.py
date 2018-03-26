@@ -15,8 +15,8 @@ urlpatterns = [
     # new
     url(r'^choirs/$', views.ChoirList.as_view(), name="Music Record List"),
     url(r'^choirs/(?P<pk>[0-9]+)/$', views.ChoirDetail.as_view(), name="Music Record Detail"),
-    url(r'^choirs/(?P<choir_id>[0-9]+)/roster/$', views.ChoirRoster, name="Choir Roster"),
-
+    url(r'^choirs/(?P<pk>[0-9]+)/roster/$', views.ChoirRoster, name="Choir Roster"),
+    url(r'^choirs/(?P<pk>[0-9]+)/events/$', views.EventsForChoir, name="Events for Choir"),
     ### Event endpoints
     # url(r'^organizations/(?P<org_id>[0-9]+)/events/$', views.EventList.as_view(), name="Event List"),
     # url(r'^organizations/(?P<org_id>[0-9]+)/events/(?P<pk>[0-9]+)/$', views.EventDetail.as_view(), name="Event Detail"),
