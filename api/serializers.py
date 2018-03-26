@@ -22,7 +22,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ("id", "name", "address", "phone_number", "email", "description", "created_date", "owner", "admins", "website_url")
+        fields = ("id", "name", "address", "phone_number", "email", "description", "created_date", "owner", "admins", "website_url", "members")
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -53,6 +53,7 @@ class UserSerializer(serializers.ModelSerializer):
     admin_of_organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     choirs = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     member_of_organizations = serializers.SerializerMethodField(method_name="get_organizations", read_only=True)
+    organizations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     email = serializers.EmailField(required=True, validators=[UniqueValidator(queryset=User.objects.all())])
     password = serializers.CharField(min_length=8, write_only=True)
@@ -64,7 +65,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'email', 'password', 'first_name', 'last_name', 'admin_of_organizations',
-                  'owned_organizations', 'choirs', "member_of_organizations", "profile")
+                  'owned_organizations', 'choirs', "member_of_organizations", "profile", "organizations")
 
     def get_organizations(self, user):
         choirs = user.choirs.all()
@@ -106,20 +107,16 @@ class ChoirSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
     choristers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     organization_name = serializers.StringRelatedField(many=False, read_only=True)
-
+    director_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Choir
         fields = ("id", "name", "meeting_day", "meeting_day_start_hour", "meeting_day_end_hour", "choristers",
-                  "organization", "organization_name", "description")
+                  "organization", "organization_name", "description", "director_name")
 
-
-class MusicRecordSerializer(serializers.ModelSerializer):
-    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
-
-    class Meta:
-        model = MusicRecord
-        fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization", "source")
+    def get_director_name(self, instance):
+        """:type instance Choir"""
+        return f"{instance.director.first_name} {instance.director.last_name}"
 
 
 class ProgramFieldSerializer(serializers.ModelSerializer):
@@ -141,6 +138,20 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = ("id", "name", "date", "time", "location", "choirs", "organization", "program_music")
+
+
+class MusicRecordSerializer(serializers.ModelSerializer):
+    organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
+    events = EventSerializer(read_only=True, source="events")
+
+    class Meta:
+        model = MusicRecord
+        fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization", "source", "program_info")
+
+    # def get_program_info(self, instance):
+    #     """:type instance MusicRecord"""
+    #     return str(instance.events.all().order_by("date"))
+
 
 
 class MusicResourceSerializer(serializers.ModelSerializer):
