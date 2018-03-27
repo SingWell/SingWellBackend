@@ -414,10 +414,11 @@ def LibraryUpload(request):
 
 @api_view(["GET", "POST"])
 @permission_classes((AllowAny,))
-def ProfilePicture(request):
+def PictureUpDown(request):
     if request.method=='POST':
-        if 'user_id' not in request.POST:
-            return HttpResponse('Not specified user id in request', status=403) 
+        if ('picture_type' not in request.POST or 'id' not in request.POST or request.POST['picture_type'] not in ['organization', 'choir', 'profile']):
+            return HttpResponse('Invalid request', status=403)
+        
         aws_a_k_i = getattr(settings, "AWS_ACCESS_KEY_ID")
         aws_s_a_k = getattr(settings, "AWS_SECRET_KEY")
         s3 = boto3.client('s3',
@@ -425,14 +426,30 @@ def ProfilePicture(request):
                         aws_secret_access_key=aws_s_a_k,)
         for key in request.FILES:
             filedata=request.FILES[key]
-            user_id = request.POST['user_id']
-            filename = '{0}/{1}'.format(user_id,key)
-            try: 
-                user_profile = UserProfile.objects.get(user_id=user_id)
-                user_profile.profile_picture_link = filename 
-                user_profile.save()
-            except:
-                return HttpResponse(status=404)
+            id = request.POST['id']
+            picture_type = request.POST['picture_type']
+            filename = '{0}/{1}/{2}'.format(picture_type,id,key)
+            if picture_type=='profile':
+                try: 
+                    user_profile = UserProfile.objects.get(user_id=id)
+                    user_profile.profile_picture_link = filename 
+                    user_profile.save()
+                except:
+                    return HttpResponse(status=404)
+            elif picture_type=='organization':
+                try:
+                    org = Organization.objects.get(id=id)
+                    org.avatar_link = filename
+                    org.save()
+                except:
+                    return HttpResponse(status=404)
+            elif picture_type=='choir':
+                try:
+                    choir = Choir.objects.get(id=id)
+                    choir.avatar_link = filename
+                    choir.save()
+                except:
+                    return HttpResponse(status=404)
             s3.upload_fileobj(filedata, 'singwell', filename)
             return HttpResponse(status=201)
     elif request.method=='GET':
@@ -441,21 +458,40 @@ def ProfilePicture(request):
         s3 = boto3.client('s3',
                         aws_access_key_id=aws_a_k_i,
                         aws_secret_access_key=aws_s_a_k,)
-        user_id = request.query_params.get('user_id',None)
-        try: 
-            user_profile = UserProfile.objects.get(user_id=user_id)
-        except Exception as e:
-            print(e)
-            return HttpResponse("User does not exist", status=404)
-        if user_profile.profile_picture_link is not None :
+        id = request.query_params.get('id',None)
+        picture_type = request.query_params.get('picture_type', None)
+        link = None
+        if picture_type=='profile':       
+            try: 
+                user_profile = UserProfile.objects.get(user_id=id)
+                link = user_profile.profile_picture_link
+            except Exception as e:
+                print(e)
+                return HttpResponse("User does not exist", status=404)
+        elif picture_type =='organization':
+            try:
+                organization = Organization.objects.get(id=id)
+                link = organization.avatar_link
+            except Exception as e:
+                print(e)
+                return HttpResponse("Organization does not exist", status=404)
+        elif picture_type =='choir':
+            try:
+                choir = Choir.objects.get(id=id)
+                link = choir.avatar_link
+            except Exception as e:
+                print(e)
+                return HttpResponse("Choir does not exist", status=404)
+                
+        if link is not None :
             filedata = io.BytesIO(b"")  # create an in memory file-like to download from S3 to
-            s3.download_fileobj(Bucket="singwell", Key=user_profile.profile_picture_link, Fileobj=filedata)  # download file from S3
+            s3.download_fileobj(Bucket="singwell", Key=link, Fileobj=filedata)  # download file from S3
             filedata.seek(0)  # the IO object has its file pointer pointing to the end of the file, so move it
             response = HttpResponse(base64.b64encode(filedata.getvalue()), status=200)
-            response["Content-Type"] = user_profile.profile_picture_link.split('.')[:-1]
+            response["Content-Type"] = link.split('.')[:-1]
             
-            response["Content-Disposition"] = 'inline; filename="{}"'.format(user_profile.profile_picture_link)
+            response["Content-Disposition"] = 'inline; filename="{}"'.format(link)
 
             return response
         else:
-            return HttpResponse("User does not have picture uploaded", status=404)
+            return HttpResponse("Picture not available for " + picture_type + "With id "+ str(id), status=404)
