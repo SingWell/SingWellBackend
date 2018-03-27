@@ -36,6 +36,7 @@ class Organization(models.Model):
     admins = models.ManyToManyField(User, related_name="admin_of_organizations")
     members = models.ManyToManyField(User, related_name="organizations")
 
+    avatar_link = models.CharField(null=True, blank=True, max_length= 255)
     website_url = models.CharField(max_length=2000, blank=True, null=True)
 
     def __str__(self):
@@ -53,7 +54,8 @@ class Choir(models.Model):
     meeting_day_end_hour = models.TimeField(null=True)
     description = models.TextField(null=True, blank=True)
     director = models.ForeignKey(User)
-
+    avatar_link = models.CharField(null=True, blank=True, max_length= 255)
+    
     # perform_day = models.IntegerField(choices=WEEKDAYS, null=True, blank=True)
     # perform_day_start_hour = models.TimeField(null=True)
     # perform_day_end_hour = models.TimeField()

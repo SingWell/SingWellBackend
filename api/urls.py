@@ -48,7 +48,9 @@ urlpatterns = [
     url(r'^login/$', views.UserLogin.as_view(), name='Login'),
     url(r'^register/$', views.UserCreate.as_view(), name='Register'),
     url(r'^profile/$', views.UserEdit.as_view(), name='Get User info/Edit User'),
-    url(r'^profilePictures/$', views.ProfilePicture, name="Profile pic upload"),
+    
+    
+    url(r'^pictures/$', views.PictureUpDown, name="Profile/Org/Choir pic upload"),
     
 
     ## Choirs for a user
