@@ -142,16 +142,15 @@ class EventSerializer(serializers.ModelSerializer):
 
 class MusicRecordSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(many=False, queryset=Organization.objects.all())
-    events = EventSerializer(read_only=True, source="events")
+    events = EventSerializer(read_only=True, many=True)
 
     class Meta:
         model = MusicRecord
-        fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization", "source", "program_info")
+        fields = ("id", "title", "composer", "arranger", "publisher", "instrumentation", "organization", "source", "events")
 
     # def get_program_info(self, instance):
     #     """:type instance MusicRecord"""
     #     return str(instance.events.all().order_by("date"))
-
 
 
 class MusicResourceSerializer(serializers.ModelSerializer):
