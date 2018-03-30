@@ -1,8 +1,9 @@
 from api.models import Organization, Choir, Event, MusicRecord, UserProfile, MusicResource, FileResource, TextResource, \
-    ProgramField
+    ProgramField, Announcement
 from django.contrib.auth.models import User
 from api.serializers import OrganizationSerializer, UserSerializer, ChoirSerializer, UserProfileSerializer, \
-    EventSerializer, MusicRecordSerializer, AuthTokenSerializer, MusicResourceSerializer, ProgramFieldSerializer
+    EventSerializer, MusicRecordSerializer, AuthTokenSerializer, MusicResourceSerializer, ProgramFieldSerializer, \
+    AnnouncementSerializer
 from rest_framework import generics, status,parsers, renderers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.models import Token
@@ -318,6 +319,35 @@ class MusicResourceDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MusicResourceSerializer
     permission_classes = ()
     queryset = MusicResource.objects.all()
+
+
+class AnnouncementList(generics.ListCreateAPIView):
+    serializer_class = AnnouncementSerializer
+    permission_classes = ()
+    queryset= Announcement.objects.all()
+
+    #override django rest Create Model Mixin
+    def create(self, request, *args, **kwargs):
+        request.data['creator']= self.request.user.id if request.user.is_authenticated else User.objects.get(email='kenton@gmail.com').id
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class AnnouncementDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AnnouncementSerializer
+    permission_classes = ()
+    queryset = Announcement.objects.all()
+   
+
+@api_view(["GET"])
+@permission_classes((AllowAny,))
+def AnnouncementsForChoir(request, pk):
+    try:
+        choir = Choir.objects.get(pk=pk)
+    except Choir.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response(AnnouncementSerializer(choir.announcements, many=True).data)
 
 
 #TODO : Do this in a DRest way
