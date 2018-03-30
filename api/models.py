@@ -165,4 +165,17 @@ class FileResource(MusicResource):
 class TextResource(MusicResource):
     field = models.CharField(max_length=3000, null=False, blank=False)
     def _get_class(self):
-        return self.__class__  
+        return self.__class__
+
+class Announcement(models.Model):
+    created_date = models.DateTimeField(auto_now_add=True)
+    message = models.CharField(max_length=1000, blank=False, null=False)
+    title = models.CharField(max_length= 100, null=False,blank=False, default='Title')
+    choir = models.ForeignKey(Choir, related_name='announcements')
+    creator = models.ForeignKey(User, related_name='created_announcements')
+    
+    def __str__(self):
+        return f"{self.title} an event of {self.choir.name}"
+
+    def __unicode__(self):
+        return f"{self.title}"

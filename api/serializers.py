@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from api.models import Organization, Choir, UserProfile, Event, MusicRecord, MusicResource, ProgramField
+from api.models import Organization, Choir, UserProfile, Event, MusicRecord, MusicResource, ProgramField, Announcement
 from rest_framework.validators import UniqueValidator
 from django.utils.translation import ugettext_lazy as _
 from rest_framework.compat import authenticate
@@ -162,6 +162,13 @@ class MusicResourceSerializer(serializers.ModelSerializer):
         model = MusicResource
         fields = ("id", "title", "music_record", "description")
 
+class AnnouncementSerializer(serializers.ModelSerializer):
+    choir = serializers.PrimaryKeyRelatedField(many=False, queryset=Choir.objects.all())
+    creator = serializers.PrimaryKeyRelatedField(many=False, queryset=User.objects.all())
+    
+    class Meta:
+        model = Announcement
+        fields = ("id", "title", "choir", "message", "creator")
 
 # overriding default AuthTokenSerializer in Django Rest Auth Token extension
 class AuthTokenSerializer(serializers.Serializer):

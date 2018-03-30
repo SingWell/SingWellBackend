@@ -53,6 +53,11 @@ urlpatterns = [
     url(r'^pictures/$', views.PictureUpDown, name="Profile/Org/Choir pic upload"),
     
 
+    url(r'^announcements/$', views.AnnouncementList.as_view(), name="Announcements List"),
+    url(r'^announcements/(?P<pk>[0-9]+)/$', views.AnnouncementDetail.as_view(), name="Announcement Detail"),
+    url(r'^choirs/(?P<pk>[0-9]+)/announcements/$', views.AnnouncementsForChoir, name="Announcements for Choir"),
+    
+
     ## Choirs for a user
     url(r'users/(?P<user_id>[0-9]+)/choirs/$', views.ChoirsForUser, name="Choirs for User")
     ]
