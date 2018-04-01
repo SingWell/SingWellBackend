@@ -68,10 +68,10 @@ class UserSerializer(serializers.ModelSerializer):
                   'owned_organizations', 'choirs', "member_of_organizations", "profile", "organizations")
 
     def get_organizations(self, user):
-        choirs = user.choirs.all()
-        orgs = set()
-        for choir in choirs:
-            orgs.add(choir.organization_id)
+        organizations = user.organizations.all()
+        orgs = []
+        for org in organizations:
+            orgs.append({'id':org.id,'name':org.name})
 
         return list(orgs)
 
