@@ -112,7 +112,7 @@ class ChoirSerializer(serializers.ModelSerializer):
     class Meta:
         model = Choir
         fields = ("id", "name", "meeting_day", "meeting_day_start_hour", "meeting_day_end_hour", "choristers",
-                  "organization", "organization_name", "description", "director_name")
+                  "organization", "organization_name", "description", "director", "director_name")
 
     def get_director_name(self, instance):
         """:type instance Choir"""
